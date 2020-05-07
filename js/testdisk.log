@@ -1,0 +1,34 @@
+
+
+Thu May  7 14:50:47 2020
+Command line: TestDisk
+
+TestDisk 7.1, Data Recovery Utility, July 2019
+Christophe GRENIER <grenier@cgsecurity.org>
+https://www.cgsecurity.org
+OS: Linux, kernel 3.10.0-1062.12.1.el7.x86_64 (#1 SMP Tue Feb 4 23:02:59 UTC 2020) x86_64
+Compiler: GCC 4.8
+ext2fs lib: 1.42.9, ntfs lib: libntfs-3g, reiserfs lib: none, ewf lib: 20140608, curses lib: ncurses 5.9
+Warning: can't get size for Disk /dev/mapper/control - 0 B - 0 sectors, sector size=512
+Hard disk list
+Disk /dev/sda - 107 GB / 100 GiB - CHS 13054 255 63, sector size=512 - VMware Virtual disk, FW:1.0
+Disk /dev/mapper/centos-root - 97 GB / 91 GiB - 191086592 sectors, sector size=512 - VMware Virtual disk, FW:1.0
+Disk /dev/mapper/centos-swap - 8455 MB / 8064 MiB - 16515072 sectors, sector size=512 - VMware Virtual disk, FW:1.0
+Disk /dev/dm-0 - 97 GB / 91 GiB - 191086592 sectors, sector size=512 - VMware Virtual disk, FW:1.0
+Disk /dev/dm-1 - 8455 MB / 8064 MiB - 16515072 sectors, sector size=512 - VMware Virtual disk, FW:1.0
+
+Partition table type (auto): Intel
+Disk /dev/sda - 107 GB / 100 GiB - VMware Virtual disk
+Partition table type: Intel
+
+Interface Advanced
+Geometry from i386 MBR: head=255 sector=63
+
+XFS Marker at 0/32/33
+
+LVM2 magic value at 130/170/41
+ 1 * Linux                    0  32 33   130 170 40    2097152
+     XFS CRC enabled, blocksize=4096, 1073 MB / 1024 MiB
+ 2 P Linux LVM              130 170 41 13054  42 44  207616000
+     LVM2, 106 GB / 98 GiB
+SIGINT detected! TestDisk has been killed.

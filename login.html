@@ -1,0 +1,85 @@
+<html>
+	<head>
+		<link rel="stylesheet" type="text/css" href="css/bootstrap-grid.min.css">
+		<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+		<link rel="stylesheet" type="text/css" href="css/bootstrap.bundle.min.css">
+		<link rel="stylesheet" type="text/css" href="css/default.css">
+
+		<script type="text/javascript" src='js/jquery-3.4.1.min.js'></script>
+		<script type="text/javascript" src='js/bootstrap.bundle.min.js'></script>
+		<script type="text/javascript" src='js/bootstrap.min.js'></script>
+		<script type="text/javascript" src='js/programa.js'></script>
+	</head>
+	<body>
+		<div class="wrapper">
+			<div class='login'>
+				<div class='login-recuadro'>
+					<div class='login-fila'>
+						<div class='login-label'>Usuario</div>
+						<div class='login-campo'><input id='name'></div>
+					</div>
+					<div class='login-fila'>
+						<div class='login-label'>Password</div>
+						<div class='login-campo'><input id='passwd' type='password'></div>
+					</div>
+					<div class='login-button'><button>Entrar</button></div>
+					<div class='login-error'></div>
+					<div class='recuperar' id='recuperar'>recuperar</div>
+				</div>
+			</div>
+		</div>
+
+		<script>
+			$(".login-button").on("click",function(){
+				$.ajax({
+					method: 'POST',
+					url: apiserver + '/v1/user/login',
+					dataType: 'json',
+					contentType: 'application/json',
+					data: '{"name":"' + $("#name").val() + '","passwd":"' + $("#passwd").val() + '"}',
+					success: function(data){
+						//alert(JSON.stringify(data))
+						document.cookie = "username=" + data.name
+						document.cookie = "token=" + data.token
+						document.cookie = "userid=" + data.id
+						window.location.href = "index.html";
+					},
+					error: function(jqXHR,textStatus,errorThrown){
+						//alert( " ERROR: " + JSON.stringify(jqXHR))
+						$(".login-error").text("Usuario Incorrecto")
+					}
+				})
+			})
+
+			$(".recuperar").on("click",function(){
+				$(".contenido").empty()
+				$(".contenido").append("<div class='login'><div class='login-recuadro'>" +
+						"<div class='login-fila'><div class='login-label'>Usuario" +
+						"</div><div class='login-campo'><input id='name'></div></div>" +
+						"<div class='recuperar-button'><button>Recuperar</button></div>" +
+						"<div class='login-error'>ingresar</div></div></div>")
+
+				$(".recuperar-button").on("click",function(){
+					$.ajax({
+						method: 'POST',
+						url: apiserver + 'userwhite',
+						dataType: 'json',
+						contentType: 'application/json',
+						data: '{"name":"' + $("#name").val() + '"}',
+						success: function(data){
+							$(".login-error").text("Clave blanqueada")
+							$(".login-error").css("color","green")
+						},
+						error: function(){
+							$(".login-error").text("Usuario Incorrecto")
+							$(".login-error").css("color","red")
+						}
+					})
+				})
+
+			})
+
+			window.onload = login(main)
+		</script>
+	</body>
+</html>
