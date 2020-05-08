@@ -229,3 +229,43 @@ function resize_ajuste(){
 	$(".wrp1").height($(window).height() - 50)
     //$(".parte_seguimientos").height($(window).height() - 130)
 }
+
+function vertical_list_show(padre,data,column,onclick,params){
+/* Genera un listado vertical
+ * padre: contenedor del listado
+ * data: array de datos.
+ * column: nombre de la columna en datos a ser mostrada.
+ * onclick: nombre de la funcion al hacer click en un elemento
+ * params: Array de nombre de columans en data que se pasan
+ * por parametro a onclick
+ */
+
+	var idlista = azar()
+	$(padre).empty()
+	$(padre).append("<div id='vertical_list_" + idlista +
+					"' class='vertical_list'>" + "</div>")
+	$.each(data,function(index,value){
+		var idfila = azar()
+		$("#vertical_list_" + idlista)
+		.append("<div id='" + idfila + "'>" + value[column] + "</div>")
+		$("#" + idfila).on('click',function(){
+			$("#vertical_list_" + idlista).children().each(function(){
+				$(this).css('background-color','')
+			})
+			$(this).css('background-color','#408588')
+			switch(params.length){
+				case 0: onclick()
+					break
+				case 1: onclick(value[params[0]])
+					break
+				case 2: onclick(value[params[0]],value[params[1]])
+					break
+				case 3: onclick(value[params[0]],value[params[1]],value[params[2]])
+					break
+				case 4: onclick(value[params[0]],value[params[1]],value[params[2]],value[params[3]])
+					break
+				default: alert("vertical_list_show: Demasiados parametros")
+			}
+		})
+	})
+}

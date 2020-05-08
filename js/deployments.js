@@ -138,19 +138,27 @@ function deploy_apply(){
 				  '","type":"' + $("#type_" + id).val() + '"'
 		switch($("#type_" + id).val()){
 			case 'out':
-				service += ',"ip":"' + $("#ip_" + id).val() + '"'
+			case 'in':
+				service += ',"ports":['
+				$(this).find("[ports]").each(function(){
+					var idport = $(this).attr('id')
+					service += '{"name":"' + $("#name_" + idport).val() +
+							    '","protocol":"' + $("#protocol_" + idport).val() +
+								'","port":"' + $("#port_" + idport).val() + '"},'
+				})
+				service = service.slice(0, -1) + ']}'
 				break
 			case 'url':
-				service += ',"url":"' + $("#url_" + id).val() + '"'
+				service += ',"urls":['
+				$(this).find("[urls]").each(function(){
+					var idport = $(this).attr('id')
+					service += '{"url":"' + $("#url_" + idport).val() +
+							    '","path":"' + $("#path_" + idport).val() +
+								'","port":"' + $("#port_" + idport).val() + '"},'
+				})
+				service = service.slice(0, -1) + ']}'
 		}
-		service += ',"ports":['
-		$(this).find("[ports]").each(function(){
-			var idport = $(this).attr('id')
-			service += '{"name":"' + $("#name_" + idport).val() +
-					    '","protocol":"' + $("#protocol_" + idport).val() +
-						'","port":"' + $("#port_" + idport).val() + '"},'
-		})
-		service = service.slice(0, -1) + ']}'
+		//alert(service)
 		data.services.push(JSON.parse(service))
 	})
 
@@ -159,7 +167,7 @@ function deploy_apply(){
 
 	ajax_POST('/v1/app/namespace/' + $("#idNamespace").val() + '/deployment/',data)
 	.then(ok =>{
-		//alert(JSON.stringify(ok))
+		alert(JSON.stringify(ok))
 	})
 	.catch(err =>{
 		alert(JSON.stringify(err))
@@ -213,20 +221,42 @@ function deploy_despliegue(parent,idNamespace,name){
 					data.volumes)
 
 		printList("#vs6",'Servicios',"services",
-                    [{name:'name',label:'nombre',length:100,type:'input'},
-                     {name:'type',label:'tipo',length:100,type:'select',
-						options:[	{value:"in",label:"interna"},
-									{value:"out",label:"externa"},
-									{value:"url",label:"URL"}
-					 ]},
-                     {name:'ip',label:'ip',length:60,type:'input',selectName:'type',option:'out'},
-                     {name:'url',label:'url',length:150,type:'input',selectName:'type',option:'url'},
-					 {name:'ports',label:'puertos',length:60,type:'list',data:[
-                        {name:'name',label:'nombre',length:60,type:'input'},
-                        {name:'protocol',label:'protocol',length:60,
-						type:'select',options:[{label:"tcp",value:"TCP"},{label:"udp",value:"UDP"}]},
-                        {name:'port',label:'puerto',length:60,type:'input'}]}],
-					data.services)
+
+        [ {name:'name',label:'nombre',length:100,type:'input'},
+          {name:'type',label:'tipo',length:100,type:'select',
+		   options:[	{value:"in",label:"interna"},
+						{value:"out",label:"externa"},
+						{value:"url",label:"URL"}
+				    ]},
+          {name:'ip',label:'ip',length:60,type:'input',selectName:'type',option:'out'},
+          {name:'ports',label:'ports',length:60,type:'list',selectName:'type',option:'in',
+		   data:[	{name:'name',label:'nombre',length:60,type:'input'},
+                    {name:'protocol',label:'protocol',length:60,
+                     type:'select',options:[
+							{label:"tcp",value:"TCP"},
+							{label:"udp",value:"UDP"}
+					]},
+                     {name:'port',label:'puerto',length:60,type:'input'}
+			]},
+           {name:'ports',label:'ports',length:60,type:'list',selectName:'type',option:'out',
+		    data:[	{name:'name',label:'nombre',length:60,type:'input'},
+                    {name:'protocol',label:'protocol',length:60,
+                     type:'select',options:[
+						{label:"tcp",value:"TCP"},
+						{label:"udp",value:"UDP"}
+				 	 ]},
+                    {name:'port',label:'puerto',length:100,type:'input'}
+				]},
+                 {name:'urls',label:'url',length:150,type:'list',selectName:'type',option:'url',
+				  data:[	{name:'url',label:'',length:200,type:'input'},
+					 		{name:'path',label:'',length:200,type:'input'},
+					 		{name:'port',label:'',length:200,type:'select',
+							 options:[
+								{value:"80", label:"http"},
+								{value:"443", label:"https"}
+							]}
+					   ]
+				  }], data.services)
 	})
 
 }

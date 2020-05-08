@@ -32,8 +32,8 @@ function printList(parent,name,grupo,campos,datos){
 	/* Presenta un formulario compuesto por campos
 	 * para gestionar datos que tienen comportamiento
 	 * de listado. Por ejemplo... listado de volumens */
-	function select_change(parte,idcampo,campos,select,v,idlinea){
-		$("#" + parte + " [select=" + $(select).attr('id') + "]").remove()
+	function select_change(parte,idcampo,campos,select,v,idlinea,datos){
+		$("[select=" + $(select).attr('id') + "]").remove()
 		$.each(campos,function(j,w){
 			if(w.selectName == v.name){
 				if(w.option == $(select).find('option:selected').val()){
@@ -42,13 +42,24 @@ function printList(parent,name,grupo,campos,datos){
 					   podamos borrarlos posteriormente. para ello, a cada
 					   campo le agregamos un atributo de nombre que lo asocie
 					   al select. Este attributo sera "select=<id select>" */
-					select.after("<div class='flex-row' id='campo_" +
+					if(w.type=='list'){
+						var idparte = azar()
+						$("#"+parte).parent().append("<div id='parte_" + idparte + "' select='"
+							   + $(select).attr('id') +
+							   "' class='flex-col tab padding'></div>")
+						if(datos != null)
+							printList("#parte_" + idparte,w.label,w.name,w.data,datos[w.name])
+                        else
+							printList("#parte_" + idparte,w.label,w.name,w.data,null)
+					} else {
+						select.after("<div class='flex-row' id='campo_" +
 								 idcampo + "'" +
 								 " select='" + $(select).attr('id') + "'>" +
 								 "<div class='label'>" + w.name +
 								 "</div><input class='plus'" +
 								 " style='width:" + w.length +
 								 "px' id='" + w.name + "_" + idlinea + "'></div>")
+					}
 				}
 			}
 		})
@@ -63,6 +74,7 @@ function printList(parent,name,grupo,campos,datos){
 		$.each(campos,function(i,v){
 			var idcampo = azar()
 			if(typeof(v.option) == 'undefined'){
+				//alert(v.name + ": " + v.type)
 				switch(v.type){
 					case 'input':
 						$("#" + parte)
@@ -99,20 +111,24 @@ function printList(parent,name,grupo,campos,datos){
 								options + "</select></div>")
 						/* Cuando el SELECT cambia */
 						$("#campo_" + idcampo).on("change",function(){
-							select_change(parte,idcampo,campos,$(this),v,idlinea)
+							select_change(parte,idcampo,campos,$(this),v,idlinea,null)
 						})
 						/* Si es una edicion */
-						if(datos !=null)
-							select_change(parte,idcampo,campos,$("#campo_" + idcampo),v,idlinea)
+						if(datos !=null){
+							//alert("Enviamos datos al select")
+							select_change(parte,idcampo,campos,$("#campo_" + idcampo),v,idlinea,datos)
+						}
 						break
 					case 'list':
+						alert(JSON.stringify(datos))
 						var partelist = "parte_" + azar()
 						$("#" + idlinea)
 						.append("<div id='" + partelist + 
 								"' class='flex-row tab padding'></div></div>")
-						if(datos != null)
+						if(datos != null){
+							alert("Hay datos")
 							printList("#" + partelist,v.label,v.name,v.data,datos[v.name])
-						else
+						} else
 							printList("#" + partelist,v.label,v.name,v.data,null)
 						break
 				}
@@ -130,9 +146,10 @@ function printList(parent,name,grupo,campos,datos){
 	$(parent)
 	.append("<div class='input'>" +
 				"<div class='flex-col'>" +
-					"<div class='flex-row'>" +
-						"<div class='flex-initial title'>" + name + "</div>" +
-						"<div class='uno'><button id='button_" + id + "'>+</button></div>" +
+					"<div class='flex-row' style='margin-bottom:10px'>" +
+						"<div class='uno title v_center'>" + name + "</div>" +
+						"<div class='initial v_center flex'><button id='button_" + id +
+						"' class='add_button'>+</button></div>" +
 					"</div><div id='listado_" + id + "' class='flex-col'></div>" +
 				"</div>" +
 			"</div>")
@@ -142,6 +159,7 @@ function printList(parent,name,grupo,campos,datos){
 
 	/* Cargamos datos pasados */
 	if(datos != null){
+		//alert("cargando datos:\n" + JSON.stringify(datos))
 		datos.forEach(function(v,i){
 			add_line(grupo,'#listado_' + id,campos,v)
 		})
