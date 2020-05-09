@@ -1,5 +1,5 @@
 function printTitle(parent,name){
-	$(parent).append("<div class='title'>" + name + "</div>")
+	$(parent).append("<div class='title v_center'>" + name + "</div>")
 }
 
 function printText(parent,label,id,data){
@@ -9,22 +9,17 @@ function printText(parent,label,id,data){
 			"</div></div>")
 }
 
-function printSelect(parent,name,input_name,data){
-	var html = "<div class='info'>" +
-				"<div class='flex-row'>" +
-					"<div class='input_label'>" + name + "</div>" +
-					"<div class='input_input'><select id='" + input_name + "'>"
+function printSelect(parent,label,input_name,options,data){
+	var html = "<div class='info'><div class='label'>" +
+			   label + "</div><div class='data'>" +
+			   "<select id='" + input_name + "'>"
 	var i=0
 	html += '<option disabled selected value> ---- </option>'
-	while(i<data.length){
-		html += "<option value='" + data[i].value + "' "
-			  + ">" + data[i].name + "</option>"
-		i++
-	}
-	html +=		 "</select></div>" +
-				"</div>" +
-				"<div class='input_error'></div>" +
-			"</div>"
+	options.forEach(function(v,i){
+		html += "<option value='" + v.value + "' "
+			  + ">" + v.name + "</option>"
+	})
+	html +=		 "</select></div></div>"
 	$(parent).append(html)
 }
 
@@ -33,6 +28,7 @@ function printList(parent,name,grupo,campos,datos){
 	 * para gestionar datos que tienen comportamiento
 	 * de listado. Por ejemplo... listado de volumens */
 	function select_change(parte,idcampo,campos,select,v,idlinea,datos){
+		//alert(JSON.stringify(datos))
 		$("[select=" + $(select).attr('id') + "]").remove()
 		$.each(campos,function(j,w){
 			if(w.selectName == v.name){
@@ -55,10 +51,12 @@ function printList(parent,name,grupo,campos,datos){
 						select.after("<div class='flex-row' id='campo_" +
 								 idcampo + "'" +
 								 " select='" + $(select).attr('id') + "'>" +
-								 "<div class='label'>" + w.name +
-								 "</div><input class='plus'" +
+								 "<div class='label'>" + w.label +
+								 "</div><input name='" + w.name + "' class='plus'" +
 								 " style='width:" + w.length +
 								 "px' id='" + w.name + "_" + idlinea + "'></div>")
+						if(datos != null)
+							$("#" + w.name + "_" + idlinea).val(datos[w.name])
 					}
 				}
 			}
@@ -120,13 +118,13 @@ function printList(parent,name,grupo,campos,datos){
 						}
 						break
 					case 'list':
-						alert(JSON.stringify(datos))
+						//alert(JSON.stringify(datos))
 						var partelist = "parte_" + azar()
 						$("#" + idlinea)
 						.append("<div id='" + partelist + 
 								"' class='flex-row tab padding'></div></div>")
 						if(datos != null){
-							alert("Hay datos")
+							//alert("Hay datos")
 							printList("#" + partelist,v.label,v.name,v.data,datos[v.name])
 						} else
 							printList("#" + partelist,v.label,v.name,v.data,null)
@@ -174,10 +172,12 @@ function printInput(parent,label,id,data){
 			"</div></div>")
 }
 
-function printTableSimple(parent,columns,data){
+function printTableSimple(parent,label,columns,data){
 	/* Imprime una tabla simple */
 	a = azar()
-	$(parent).append("<TABLE id='table_" + a +
+	$(parent).append("<div class='info'><div class='label'>" +
+					 label + "</div><div class='data'>" +
+					 "<TABLE id='table_" + a +
 					 "' class='static_table' border='1'></TABLE>")
 	fila=''
 	$.each(columns,function(i,v){

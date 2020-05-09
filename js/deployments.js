@@ -50,18 +50,15 @@ function deploy_list(container){
 
 function deploy_status(parent,idNamespace,name){
 	/* informa del estado de un deploy */
+	$(parent).empty()
+	$(parent).append("<div id='vs1' class='flex col uno'></div>")
 	ajax_GET('/v1/app/namespace/' + idNamespace + '/deployment/' + name + '/status')
 	.then((data)=> {
-		//alert(JSON.stringify(data))
-		$(parent).empty()
-		$(parent).append("<div class='flex col uno overflow-y'>" +
-				"<div id='vs1' class='vertical_simetric'></div>"+
-				"<div id='vs2' class='vertical_simetric border-left'></div></div>")
 
 		printTitle("#vs1","Detalle")
-		printText("#vs1","Nombre",data.metadata.name)
-		printText("#vs1","Namespace",data.metadata.namespace)
-		printText("#vs1","Fecha Creaci&oacute;n",data.metadata.creationTimestamp)
+		printText("#vs1","Nombre",azar(),data.metadata.name)
+		printText("#vs1","Namespace",azar(),data.metadata.namespace)
+		printText("#vs1","Fecha Creaci&oacute;n",azar(),data.metadata.creationTimestamp)
 
 		printTitle("#vs1","Replicas")
 		var c=[ {name:'solicitadas',width:'100px'},
@@ -73,14 +70,20 @@ function deploy_status(parent,idNamespace,name){
 			data.status.updatedReplicas,
 			data.status.availableReplicas,
 			data.status.unavailableReplicas]]
-		printStaticTable("#vs1",c,a)
+		//printStaticTable("#vs1",c,a)
+		printTableSimple('#vs1',"Replicas",c,a)
 
-		printTitle("#vs2","Servicios")
-		printText("#vs2","Restart policy",data.spec.restartPolicy)
-		printText("#vs2","Terminated grace period",data.spec.terminationGracePeriodSeconds)
-		printText("#vs2","Dns policy",data.spec.dnsPolicy)
+		// Estrategia
+		if(data.spec.strategy.type == 'RollingUpdate'){
+			printText("#vs1","Estrategia",azar(),'RollingUpdate: ' + 
+						data.spec.strategy.rollingUpdate.maxUnavailable +
+						' max. no disponible / ' +
+						data.spec.strategy.rollingUpdate.maxSurge +
+						' max. pico')
+		}
 	})
 	.catch(err =>{
+		alert(err)
 		alert(JSON.stringify(err))
 	})
 }
@@ -175,27 +178,54 @@ function deploy_apply(){
 }
 
 function deploy_despliegue(parent,idNamespace,name){
+	/* Se utiliza tanto para las antas como para las
+ 	 * modificaciones de los despliegues */
 	$(parent).empty()
-	$(parent).append("<div id='section' class='flex col uno overflow-y'>" +
-					 	"<div class='flex row cero'>" +
-					 		"<div id='vs1' class='flex col uno padding'></div>" +
-					 		"<div id='vs2' class='flex col uno padding'></div>" + 
-					 	"</div>"+
-                	 	"<div id='vs3' class='flex col uno padding'></div>" +
-                	 	"<div id='vs4' class='flex col uno padding'></div>" +
-                	 	"<div id='vs5' class='flex col uno padding'></div>" +
-                	 	"<div id='vs6' class='flex col uno padding'></div>" +
-					 "</div><div id='actions' class='actions'></div>")
-	actions_make('#actions',[
-			{name:'Apli',action:deploy_apply},
-			{name:'Elim',action:deploy_delete}])
-	ajax_GET('/v1/app/namespace/' + idNamespace + '/deployment/' + name )
-	.then(data=>{
-		$(parent).append("<input type='hidden' id='fibercorpID' value='" + data.fibercorpID + "'>")
-		$(parent).append("<input type='hidden' id='idNamespace' value='" + idNamespace + "'>")
-		printText('#vs1',"Nombre",'deployName',data.deployName)
+	var a = "<div id='section' class='flex col uno overflow-y'>" +
+			 	"<div class='flex row cero'>" +
+			 		"<div id='vs1' class='flex col uno padding'></div>" +
+			 		"<div id='vs2' class='flex col uno padding'></div>" + 
+			 	"</div>"+
+            	"<div id='vs3' class='flex col uno padding'></div>" +
+           	 	"<div id='vs4' class='flex col uno padding'></div>" +
+           	 	"<div id='vs5' class='flex col uno padding'></div>" +
+           	 	"<div id='vs6' class='flex col uno padding'></div></div>"
+	if(idNamespace != null){
+		a += "<div id='actions' class='actions'></div>"
+		$(parent).append(a)
+	} else {
+		a += "<div style='text-align: center;'>" +
+			 "<button id='nuevoDeploy' class='alta_button'>Agregar</button></div>"
+		$(parent).append(a)
+		$("#nuevoDeploy").on('click',function(){
+			alert("Agregamos un deploy")
+		})
+	}
+	var promise
+	if(idNamespace != null){
+		/* Es una modificacion */
+		actions_make('#actions',[
+				{name:'Apli',action:deploy_apply},
+				{name:'Elim',action:deploy_delete}])
+		promise = ajax_GET('/v1/app/namespace/' + idNamespace + '/deployment/' + name )
+	} else {
+		/* Es un alta */
+		/* Debemos cargar con null algunos datos */
+		data = {resources:{cpu:'1',mem:'10Mi'},replicas:'1',image:''}
+		printInput('#vs1',"Namespace",'namespaceName','')
+		promise = new Promise((resolv,reject)=> { resolv(data)})
+	}
+	promise.then(data=>{
+		if(idNamespace != null){
+			$(parent).append("<input type='hidden' id='fibercorpID' value='" + data.fibercorpID + "'>")
+			$(parent).append("<input type='hidden' id='idNamespace' value='" + idNamespace + "'>")
+			printText('#vs1',"Nombre",'deployName',data.deployName)
+			printText('#vs2',"Nombre",'containerName',data.containerName)
+		} else {
+			printInput('#vs1',"Nombre",'deployName','')
+			printInput('#vs2',"Nombre",'containerName','')
+		}
 		printInput('#vs1',"Replicas",'replicas',data.replicas)
-		printText('#vs2',"Nombre",'containerName',data.containerName)
 		printInput('#vs2',"Imagen",'image',data.image)
 		printInput('#vs2',"Cpu",'cpu',data.resources.cpu)
 		printInput('#vs2',"Memoria",'mem',data.resources.mem)
@@ -208,13 +238,13 @@ function deploy_despliegue(parent,idNamespace,name){
 				   data.envs)
 		printList("#vs5",'Volumenes',"volumes",
 					[{name:'name',label:'nombre',length:100,type:'input'},
-					{name:'path',label:'Punto de montaje',length:100,type:'input'},
+					{name:'path',label:'Montaje',length:180,type:'input'},
 					{name:'type',label:'tipo',length:100,type:'select',
-					options:[	{value:'pvc',label:"PVC"},
+					options:[	{value:'pvc',label:"pvc"},
 								{value:'emptydir',label:"EmptyDir"},
 								{value:'secret',label:"Secret"}
 					]},
-					{name:'pvc',label:'PVC',length:60,type:'input',
+					{name:'pvc',label:'Nombre',length:180,type:'input',
 					 selectName:'type',option:'pvc'},
 					{name:'Secret',label:'Secret',length:60,type:'input',
 					 selectName:'type',option:'secret'}],
@@ -289,17 +319,14 @@ function deploy_container_status(parent,data){
 function deploy_pod_status(parent,data){
 	var id = azar()
 	var lineas = new Array
-	$(parent).append("<div id='titulo" + id + "'></div>" +
-					 "<div class='flex-row'>" +
-					 	"<div id='p1" + id + "' class='flex-col '></div>" +
-					 	"<div id='p2" + id + "' class='flex-col uno'></div>" +
-					 "</div>" +
-					 "<div id='p3" + id + "' class='flex-col uno'></div>" +
-					 "<div id='p4" + id + "' class='flex-col uno'></div>")
-	printTitle('#titulo'+id,"POD: " + data.metadata.name)
+	$(parent).append("<div id='p1" + id + "' class='flex-col padding uno'></div>")
+	printTitle('#p1'+id,"POD: " + data.metadata.name)
 	printText('#p1'+id,"Creado",azar(),data.metadata.creationTimestamp)
 	printText('#p1'+id,"Face",azar(),data.status.phase)
 	printText('#p1'+id,"Fecha inicio",azar(),data.status.startTime)
+
+	/* Container Statuses */
+	deploy_containers_status('#p1'+id,data.status.containerStatuses)
 
 	/* Condiciones */
 	var columnas = [{name:'Nombre',width:'100px'},
@@ -321,10 +348,8 @@ function deploy_pod_status(parent,data){
 			linea.push('-')
 		lineas.push(linea)
 	})
-	printTableSimple('#p3'+id,columnas,lineas)
+	printTableSimple('#p1'+id,"Condiciones",columnas,lineas)
 
-	/* Container Statuses */
-	deploy_containers_status('#p4'+id,data.status.containerStatuses)
 }
 
 function deploy_pods_status(parent,idNamespace,name){

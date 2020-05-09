@@ -100,6 +100,10 @@ div.plus{
 	height:0px;
 }
 
+div.plus_help{
+	font-size:14px;
+}
+
 div.plus_items{
 	flex:initial;
 	width:350px;
@@ -109,15 +113,31 @@ div.plus_items{
 }
 
 div.plus_add{
+	display:flex;
+	flex-direction:row;
 	position:absolute;
 	background-color:#0b0821;
-	padding:10px;
 	height:100%;
 	width:0%;
 	top:0px;
 	left:0px;
 	font-size:20px;
-	overflow-y:	scroll
+}
+
+div.plus_add_detail{
+	padding:20px;
+	background-color:#0b0821;
+	flex:initial;
+	width:250px;
+	border-right:1px solid black;
+}
+
+div.plus_add_data{
+	background-color:#007bff;
+	display: flex;
+	flex: 1 1;
+	flex-direction: column;
+	//overflow-y: scroll;
 }
 
 div.plus_item{
@@ -438,6 +458,13 @@ button{
 	width:	50px;
 }
 
+.alta_button{
+	background-color:#255d5f;
+	color:#eee;
+	padding: 10px 36px;
+	font-size: 18px;
+}
+
 /******* Vertical list *************/
 div.vertical_list{
 	background-color:#255d5f;
@@ -509,8 +536,8 @@ div.solapa_body{
 .info{
 	display:flex;
 	flex-direction:row;
-//	margin-bottom:10px;
-	height: 40px;
+	margin:4px 0px;
+//	height: 40px;
 }
 .label{
 	flex:1 1;
@@ -518,7 +545,7 @@ div.solapa_body{
 	padding:0px 10px;
 }
 .data{
-	flex:1 1;
+	flex:2 1;
 	font-size:18px;
 	color: #fff;
 }
@@ -532,6 +559,10 @@ input{
 	padding: 3px 10px;
 	font-size: 16px;
 }
+select{
+	padding: 3px 10px;
+	font-size: 16px;
+}
 
 /***************************************/
 
@@ -541,7 +572,7 @@ div.input{
 	padding:10px;
 	flex-direction:column;
 	font-size:18px;
-	border: solid 1px #007bff;
+	//border: solid 1px #007bff;
 }
 div.flex-col{
 	display:flex;

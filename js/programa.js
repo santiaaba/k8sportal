@@ -55,6 +55,7 @@ function make_menu(){
 	.append("<div id='m-namespace'>N</div>")
 	.append("<div id='m-deploy'>D</div>")
 	.append("<div id='m-can'>E</div>")
+	.append("<div id='m-volume'>V</div>")
 
 	$("#menuplus")
 	.append("<div id='m-plus'>+</div>")
@@ -66,6 +67,10 @@ function make_menu(){
 
 	$("#m-deploy").on('click', function(){
 		menu_click(deploy_list,deploy_sections,['idNamespace','name'])
+	})
+
+	$("#m-volume").on('click', function(){
+		menu_click(volume_list,volume_sections,['idNamespace','name'])
 	})
 
 

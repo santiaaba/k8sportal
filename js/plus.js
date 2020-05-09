@@ -36,11 +36,26 @@ function plus_make(){
 	var data = new Array;
 	data.push({title:'Namespace',img:'namespace.png',
 			   detail:'Crear un nuevo namespace',
-			   f:null})
+			   help:'<p>Un Namespace le permite organizar sus proyectos.</p>' +
+					'<p>Los Namespace agrupan recursos como vol&uacute;menes de discos, ' +
+					'despliegues de aplicaciones.</p><p>Las aplicaciones de una namespace ' +
+					'pueden verse entre si pero no de con aplicaciones de otros namespace.' +
+					'Al menos no si no se lo permite explicitamente</p>',
+			   f:crear_namespace})
 	data.push({title:'Despliegue',img:'deployment.png',
-			   detail:'Crear un nuevo despliegue',f:plus_deployment})
+			   detail:'Crear un nuevo despliegue',
+			   help:'<p>Un depliegue es la implementaci&oacute;n de una aplicaci&oacute;n</p>',
+			   f:crear_deployment})
+	data.push({title:'Volumen',img:'can.png',
+			   detail:'Crear un nuevo Volumen',
+			   help:'<p>Un volumen es la forma de almacenar datos de forma persistente.</p> ' +
+					'<p>Un volumen pertenece al namespace en el que se lo cree. Solo las ' +
+					'aplicaciones dentro de ese namespace puede ver el volumen creado</p>',
+			   f:crear_volumen})
 	data.push({title:'Enlatado',img:'can.png',
-			   detail:'Crear un nuevo enlatado',f:null})
+			   detail:'Crear un nuevo enlatado',
+			   help:'UnEnlatado es...',
+			   f:null})
 	$("#plus").append("<div id='plus_items' class='plus_items'></div>")
 	$.each(data,function(index,value){
 		var id=azar()
@@ -51,199 +66,24 @@ function plus_make(){
 				"<div class='plus_title'>" + value.title + "</div>" +
 				"<div class='plus_detail'>" + value.detail + "</div></div></div>")
 		$("#plus_item_" + id).on("click",function(){
-			plus_select(value.f)
+			plus_select(value.f,value.img,value.help)
 		})
 	})
 }
 
-function plus_select(f){
-	$("#plus").after("<div id='plus_add' class='plus_add'></div>")
+function plus_select(f,image,help){
+	$("#plus")
+	.after("<div id='plus_add' class='plus_add'>" +
+		   "<div class='plus_add_detail'>" +
+		   "<img src='img/" + image + "'>" +
+		   "<div class='plus_help'>" + help + "</div>" +
+		   "</div>" +
+		   "<div class='plus_add_data' id='plus_add_data'></div></div>")
 	f()
 	$("#plus_add").animate({
 		right:'0px',
 		width:'100%'
 	},400)
-}
-
-function plus_add_select(parent,name,input_name,data){
-	var html = "<div class='input'>" +
-				"<div class='flex-row'>" +
-					"<div class='input_label'>" + name + "</div>" +
-					"<div class='input_input'><select id='" + input_name + "'>"
-	var i=0
-	html += '<option disabled selected value> ---- </option>'
-	while(i<data.length){
-		html += "<option value='" + data[i].value + "' "
-			  + ">" + data[i].name + "</option>"
-		i++
-	}
-	html += 	    "</select></div>" +
-				"</div>" +
-				"<div class='input_error'></div>" +
-			"</div>"
-	$(parent).append(html)
-}
-
-function plus_add_input(parent,name,input_name){
-	$(parent)
-	.append("<div class='input'>" +
-				"<div class='flex-row'>" +
-					"<div class='input_label'>" + name + "</div>" +
-					"<div><input id='" + input_name + "'></div>" +
-				"</div>" +
-				"<div class='input_error'></div>" +
-			"</div>")
-}
-
-function plus_add_list(parent,label,name,campos){
-	$(parent)
-	.append("<div class='input'>" +
-				"<div class='flex-row'>" +
-					"<div class='input_label'>" + label + "</div>" +
-					"<div class='flex-col'>" +
-						"<div class='flex-row'>" +
-							"<div id='campos_" + name + "' class='flex-row'></div>" +
-							"<div><button id='button_" + name + "'>+</button></div>" +
-						"</div>" +
-						"<div id='list_" + name + "' class='input_list'></div>" +
-					"</div>" +
-				"</div>" +
-				"<div id='error_" + name + "' class='input_error'></div>" +
-			"</div>")
-	$.each(campos,function(i,v){
-		if(typeof(v.option) == 'undefined'){
-			if(v.type == 'input'){
-				$("#campos_" + name)
-				.append("<div>" + v.name + "</div><input class='plus' style='width:" + v.length +
-						"px' id='input_" + name + "_" + v.name + "'>")
-			} else {
-				var options = '<option disabled selected value> ---- </option>'
-				$.each(v.options,function(i2,v2){
-					options += "<option>" + v2 + "</option>"
-				})
-				$("#campos_" + name)
-				.append("<div>" + v.name + "</div><select name='" + v.name + "' class='plus' style='width:" +
-						v.length + "px' id='input_" + name + "_" + v.name + "'>" + options + "</select>")
-				$("#input_" + name + "_" + v.name)
-				.on("change",function(){
-					const c = campos
-					const select = $(this)
-					$.each(c,function(i2,v2){
-						if(v2.selectName == v.name){
-							$("#block_" + name + '_' + v2.option).remove()
-							if(v2.option == select.val()){
-								select.after("<div class='flex-row' id='block_" + name + "_" + v2.name + "'>"
-											 + "<div>" + v2.name + "</div><input class='plus'" +
-											 " style='width:" + v2.length +
-											 "px' id='input_" + name + "_" + v2.name + "'></div>")
-							}
-						}
-					})
-				})
-			}
-		}
-	})
-	$("#button_" + name).on("click",function(){
-		const c = campos
-		var b = azar()
-		var value = ''	//Muestra el valor tal cual se pasa luego en la API
-		$.each(c,function(i,v){
-			if(typeof(v.selectName) != 'undefined'){
-				if(v.option == $("#input_" + name + "_" + v.selectName).val()){
-					value += '"' + name + '":"' + $("#input_" + name + "_" + v.name).val() + '", '
-				}
-			} else {
-				value += '"' + v.name + '":"' + $("#input_" + name + "_" + v.name).val() + '", '
-				if(v.type == 'input'){
-					$("#input_" + name + "_" + v.name).val("")
-				}
-			}
-		})
-		if(value.length>0){
-			value = value.slice(0, -2)
-		}
-		$("#list_" + name)
-		.append("<div id='list_item_" + b + "' class='flex-row'><div>" +
-				"<input type='hidden' id='data_" + name + "_" + b + "' value='" + value + "'>" +
-				value + "</div><div>" +
-				  "<button id='remove_item_" + b + "'>-</button></div></div>")
-		$("#input_" + name).val("")
-		$("#remove_item_" + b).on("click",function(){
-			$("#list_item_" + b).remove()
-		})
-	})
-}
-
-function make_json(elementType){
-	switch(elementType){
-		case 'deployment':
-			return make_json_deployment()
-			break
-	}
-}
-
-function make_json_deployment(){
-
-	var json ='{"deployName":"' + $('#deploy_name').val() + '",' +
-	'  "image":"' + $('#deploy_image').val() + '",' +
-	'  "containerName":"' + $('#deploy_container_name').val() + '",' +
-	'  "resources":{ "cpu":"' + $('#deploy_cpu').val() + 'm",' +
-	'   "mem":"' + $('#deploy_mem').val() + 'Mi" },' +
-	'  "replicas":' + $('#deploy_replica').val()
-
-	/* Argumentos  */
-	var aux =''
-	$(':input').each(function(){
-		var s = $(this).attr('id')
-		if(s.match('data_arg_.*'))
-			aux += $(this).val().substring(12) + ','
-	})
-	if(aux.length > 0)
-		json += ',"args":[' + aux.slice(0, -1) + ']'
-
-	/* Environment */
-	aux =''
-	$(':input').each(function(){
-		var s = $(this).attr('id')
-		if(s.match('data_env_.*'))
-			aux += '{' + $(this).val() + '},'
-	})
-	if(aux.length > 0)
-		json += ',"envs":[' + aux.slice(0, -1) + ']'
-
-	/* Puertos */
-	aux =''
-	$(':input').each(function(){
-		var s = $(this).attr('id')
-		if(s.match('data_port_.*'))
-			aux += '{' + $(this).val() + '},'
-	})
-	if(aux.length > 0)
-		json += ',"ports":[' + aux.slice(0, -1) + ']'
-
-	/* Volumens */
-	aux =''
-	$(':input').each(function(){
-		var s = $(this).attr('id')
-		if(s.match('data_vol_.*'))
-			aux += '{' + $(this).val() + '},'
-	})
-	if(aux.length > 0)
-		json += ',"volumes":[' + aux.slice(0, -1) + ']'
-
-
-	/* Puntos montaje */
-	aux =''
-	$(':input').each(function(){
-		var s = $(this).attr('id')
-		if(s.match('data_mount_.*'))
-			aux += '{' + $(this).val() + '},'
-	})
-	if(aux.length > 0)
-		json += ',"mounts":[' + aux.slice(0, -1) + ']'
-
-	json += '}'
-	return json
 }
 
 function plus_commit(parent,elementType,namespaceField){
@@ -274,43 +114,62 @@ function plus_commit(parent,elementType,namespaceField){
 		})
 	})
 }
+function crear_deployment(){
+	deploy_despliegue("#plus_add_data",null,null)
+}
 
-function plus_deployment(){
-	namespace_data()
-	.then(data => {
-		//alert(JSON.stringify(data))
-		var i=0
+function crear_namespace(){
+	$(".plus_add_data")
+	.empty()
+	.append(	"<div class='flex uno' id='plus_play' " +
+				"style='display:flex; align-items:center'></div>" + 
+				"<div style='text-align: center; padding-bottom:10px'>" +
+				"<button class='alta_button'>Agregar</button></div></div>")
+	printInput('#plus_play',"Namespace",'namespace','')
+	$(".alta_button").on('click',function(){
+		ajax_POST('/v1/app/namespace/',{name:$("#namespace").val()})
+		.then(ok => {
+			alert("Namespace dado de alta")
+		})
+		.catch(err => {
+			alert(JSON.stringify(err))
+		})
+	})
+}
+
+function crear_volumen(){
+	/* Opciones de momento estaticas */
+	$(".plus_add_data")
+	.empty()
+	.append(	"<div class='flex uno col' id='plus_play' " +
+				"style='display:flex; align-items:left; justify-content:center'></div>" + 
+				"<div style='text-align: center; padding-bottom:10px'>" +
+				"<button class='alta_button'>Agregar</button></div></div>")
+	var options = [{name:'Ceph',value:'csi-rbd-sc'}]
+	
+	ajax_GET('/v1/app/namespace')
+	.then(data=>{
 		namespaces = new Array
-		while(i < data.length ){
-			namespaces.push({name:data[i].name,value:data[i].id})
-			i++
-		}
-		plus_add_input('#plus_add','Nombre','deploy_name')
-		plus_add_select('#plus_add','Namespace','deploy_namespace',namespaces)
-		plus_add_input('#plus_add','Nombre del Contenedor','deploy_container_name')
-		plus_add_input('#plus_add','CPU','deploy_cpu')
-		plus_add_input('#plus_add','Memoria','deploy_mem')
-		plus_add_input('#plus_add','Imagen','deploy_image')
-		plus_add_input('#plus_add','Replicas','deploy_replica')
-		plus_add_list('#plus_add','Argumentos','arg',[{name:'argumento',length:200,type:'input'}])
-		plus_add_list('#plus_add','Variables de Entorno','env',
-					[{name:'nombre',length:100,type:'input'},{name:'valor',length:250,type:'input'}])
-		plus_add_list('#plus_add','Volumenes','vol',
-					[{name:'nombre',length:100,type:'input'},
-					{name:'tipo',length:100,type:'select',options:["PVC","EmptyDir","Secret"]},
-					{name:'PVC',length:60,type:'input',selectName:'tipo',option:'PVC'},
-					{name:'Secret',length:60,type:'input',selectName:'tipo',option:'Secret'}])
-		plus_add_list('#plus_add','Puertos Montaje','mount',
-					[{name:'nombre',length:150,type:'input'},
-					{name:'punto',length:150,type:'input'}])
-		plus_add_list('#plus_add','Puertos','port',
-					[{name:'nombre',length:100,type:'input'},
-					{name:'protocolo',length:60,type:'select',options:["tcp","udp"]},
-					{name:'puerto',length:60,type:'input'},
-					{name:'tipo',length:100,type:'select',options:["interna","externa","URL"]},
-					{name:'externa',length:60,type:'input',selectName:'tipo',option:'externa'},
-					{name:'url',length:60,type:'input',selectName:'tipo',option:'URL'}])
-		plus_commit('#plus_add','deployment','#deploy_namespace')
+		data.forEach(function(v,i){
+			namespaces.push({name:v.name,value:v.id})
+		})
+		printSelect('#plus_play',"Namespace",'namespace',namespaces,'')
+		printInput('#plus_play',"Nombre del Volumen",'name','')
+		printSelect('#plus_play',"Tipo",'type',options,'')
+		printInput('#plus_play',"Capasidad(GB)",'size','')
+		$(".alta_button").on('click',function(){
+			data = {name:$("#name").val(),
+					size:$("#size").val(),
+					class:$("#type").val()}
+			//alert(JSON.stringify(data))
+			ajax_POST('/v1/app/namespace/' + $("#namespace").val() + '/volume/',data)
+			.then(ok => {
+				alert("Volumen dado de alta")
+			})
+			.catch(err => {
+				alert(JSON.stringify(err))
+			})
+		})
 	})
 	.catch(err=>{
 		alert(JSON.stringify(err))
