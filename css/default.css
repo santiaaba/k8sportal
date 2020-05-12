@@ -294,11 +294,17 @@ div.menu1 div{
 	color:white;
 	font-weight:bold;
 	font-size:20px;
-	border: solid 1px #007bff;
+	border: solid 1px #0b0821;
+}
+
+div.menu1 div img {
+	width: 45px;
+	height: 45px;
 }
 
 div.menu1 div:hover{
-	background-color:#255d5f;
+	background-color: #ddd;
+	border: solid 1px #007bff;
 }
 
 div.menuplus{
@@ -545,7 +551,7 @@ div.solapa_body{
 	padding:0px 10px;
 }
 .data{
-	flex:2 1;
+	flex:3 1;
 	font-size:18px;
 	color: #fff;
 }
@@ -613,15 +619,15 @@ table.static_table{
 }
 
 table.static_table th{
-	background-color: #0b0821;
+	background-color: #007bff;
 	font-size: 16px;
-	border: solid 1px #0b0821;
+	border: solid 1px #007bff;
 	padding:6px;
 }
 
 table.static_table td{
 	font-size: 16px;
-	border: solid 1px #0b0821;
+	border: solid 1px #007bff;
 	padding:6px;
 }
 

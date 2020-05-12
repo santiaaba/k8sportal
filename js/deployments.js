@@ -166,7 +166,7 @@ function deploy_apply(){
 	})
 
 	//alert(JSON.stringify(data))
-	$(".solapa_body").append(JSON.stringify(data))
+	//$(".solapa_body").append(JSON.stringify(data))
 
 	ajax_POST('/v1/app/namespace/' + $("#idNamespace").val() + '/deployment/',data)
 	.then(ok =>{
@@ -233,8 +233,8 @@ function deploy_despliegue(parent,idNamespace,name){
 				  data.args)
 
 		printList('#vs4','Variables',"envs",
-				  [{name:'name',label:'nombre',length:100,type:'input'},
-				   {name:'value',label:'valor',length:250,type:'input'}],
+				  [{name:'name',label:'nombre',length:300,type:'input'},
+				   {name:'value',label:'valor',length:300,type:'input'}],
 				   data.envs)
 		printList("#vs5",'Volumenes',"volumes",
 					[{name:'name',label:'nombre',length:100,type:'input'},
@@ -350,35 +350,35 @@ function deploy_pod_status(parent,data){
 	})
 	printTableSimple('#p1'+id,"Condiciones",columnas,lineas)
 
+	/* Eventos. */
+	var columnas = [{name:'Tipo',width:'100px'},
+				   {name:'Motivo',width:'100px'},
+				   {name:'Edad',width:'100px'},
+				   {name:'Origen',width:'100px'},
+				   {name:'Mensaje',width:'300px'}]
+	lineas = []
+	data.events.forEach(function(v,i){
+		var linea = new Array
+		linea.push(v.type)
+		linea.push(v.reason)
+		linea.push(v.deprecatedFirstTimestamp)
+		linea.push(v.deprecatedSource.component)
+		linea.push(v.note)
+		lineas.push(linea)
+	})
+	printTableSimple('#p1'+id,"Eventos",columnas,lineas)
+
+
 }
 
 function deploy_pods_status(parent,idNamespace,name){
 	ajax_GET('/v1/app/namespace/' + idNamespace + '/deployment/' + name + '/pods')
 	.then(ok=>{
-		/*
-		data = new Array
-		columns = new Array
-		anchos = [ '250px', '250px', '120px', '250px']
-		columns.push({nombre:'Nombre',dato:'name'})
-		columns.push({nombre:'Creado',dato:'created'})
-		columns.push({nombre:'Estado',dato:'status'})
-		columns.push({nombre:'Corriendo Deste',dato:'started'})
-		*/
 		$.each(ok.items,function(i,v){
 			id = azar()
 			$(parent).append("<div id='" + id + "' class='flex-col'></div>")
 			deploy_pod_status('#'+id,v)
-			/*
-			data.push({name:v.metadata.name,
-					   created:v.metadata.creationTimestamp,
-					   status:v.status.phase,
-					   started:v.status.startTime})
-			*/
 		})
-		/*
-		alert(JSON.stringify(data))
-		printList(parent,columns,data,null,null,coloresDefault(data),anchos,name,1)
-		*/
 	})
 }
 

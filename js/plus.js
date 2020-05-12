@@ -52,6 +52,10 @@ function plus_make(){
 					'<p>Un volumen pertenece al namespace en el que se lo cree. Solo las ' +
 					'aplicaciones dentro de ese namespace puede ver el volumen creado</p>',
 			   f:crear_volumen})
+	data.push({title:'Secret',img:'secret.png',
+			   detail:'Crear un nuevo Secreto',
+			   help:'<p>Un secreto es la forma de...</p> ',
+			   f:crear_secreto})
 	data.push({title:'Enlatado',img:'can.png',
 			   detail:'Crear un nuevo enlatado',
 			   help:'UnEnlatado es...',
@@ -135,6 +139,10 @@ function crear_namespace(){
 			alert(JSON.stringify(err))
 		})
 	})
+}
+
+function crear_secreto(){
+	secret_despliegue("#plus_add_data",null,null)
 }
 
 function crear_volumen(){

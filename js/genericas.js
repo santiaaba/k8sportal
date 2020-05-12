@@ -5,7 +5,8 @@ function printTitle(parent,name){
 function printText(parent,label,id,data){
 	$(parent)
 	.append("<div class='info'><div class='label'>" +
-			label + "</div><div id='" + id + "' class='data'>" + data +
+			label + "</div><div class='data'>" + data +
+			"<input id='" + id + "' type='hidden' value='" + data + "'>" +
 			"</div></div>")
 }
 
@@ -21,6 +22,52 @@ function printSelect(parent,label,input_name,options,data){
 	})
 	html +=		 "</select></div></div>"
 	$(parent).append(html)
+}
+
+function printAttibutes(parent,name,grupo,datos){
+	/* Presenta un formulario con par key:value */
+
+	function add_line(grupo,parent,dato){
+		var idlinea = azar()
+		var parte = "parte_" + azar()
+		$("#listado_" + id)
+		.append("<div id='" + idlinea + "' class='flex-col padding'>" +
+				"<div id='" + parte + "' class='flex-row'></div></div>")
+		$("#" + parte)
+		.append("<div " + grupo + " class='flex-row'>" +
+				"<input name='" + idlinea + "' id='name_" + idlinea + "'>" + 
+				"<input id='value_" + + idlinea + "'></div>")
+		if(dato!=null){
+			$("#name_" + idlinea).val(dato.name)
+			$("#value_" + idlinea).val(dato.value)
+		}
+		$("#" + parte).append("<button id='delete_" + idlinea + "'>-</button>")
+		$("#delete_" + idlinea).on("click",function(){
+			$("#" + idlinea).remove()
+		})
+	}
+	
+	var id = azar()
+	$(parent)
+	.append("<div class='input'>" +
+				"<div class='flex-col'>" +
+					"<div class='flex-row' style='margin-bottom:10px'>" +
+						"<div class='uno title v_center'>" + name + "</div>" +
+						"<div class='initial v_center flex'><button id='button_" + id +
+						"' class='add_button'>+</button></div>" +
+					"</div><div id='listado_" + id + "' class='flex-col'></div>" +
+				"</div>" +
+			"</div>")
+	$("#button_" + id).on("click",function(){
+		add_line(grupo,'#listado_' + id,null)
+	})
+
+	/* Cargamos datos pasados */
+	if(datos != null){
+		Object.keys(datos).forEach(function(v,i){
+			add_line(grupo,'#listado_' + id,{name:v,value:datos[v]})
+		})
+	}
 }
 
 function printList(parent,name,grupo,campos,datos){
@@ -157,7 +204,6 @@ function printList(parent,name,grupo,campos,datos){
 
 	/* Cargamos datos pasados */
 	if(datos != null){
-		//alert("cargando datos:\n" + JSON.stringify(datos))
 		datos.forEach(function(v,i){
 			add_line(grupo,'#listado_' + id,campos,v)
 		})

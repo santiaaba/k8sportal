@@ -52,10 +52,11 @@ function menu_click(f,g,h){
 
 function make_menu(){
 	$("#menu1")
-	.append("<div id='m-namespace'>N</div>")
-	.append("<div id='m-deploy'>D</div>")
-	.append("<div id='m-can'>E</div>")
-	.append("<div id='m-volume'>V</div>")
+	.append("<div id='m-namespace'><img src='img/capas.png'></div>")
+	.append("<div id='m-deploy'><img src='img/ship.png'></div>")
+	.append("<div id='m-can'><img src='img/can.png'></div>")
+	.append("<div id='m-volume'><img src='img/storage.png'></div>")
+	.append("<div id='m-secret'><img src='img/key.png'></div>")
 
 	$("#menuplus")
 	.append("<div id='m-plus'>+</div>")
@@ -73,8 +74,13 @@ function make_menu(){
 		menu_click(volume_list,volume_sections,['idNamespace','name'])
 	})
 
+	$("#m-can").on('click', function(){
+		menu_click(volume_list,can_sections,['idNamespace','name'])
+	})
 
-	$("#m-can").on('click', function(){ can_show("#content") })
+	$("#m-secret").on('click', function(){
+		menu_click(secret_list,secret_sections,['idNamespace','name'])
+	})
 }
 
 
