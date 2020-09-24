@@ -1,0 +1,54 @@
+<html>
+	<head>
+		<link rel="stylesheet" type="text/css" href="css/Chart.min.css">
+
+		<script src="https://www.chartjs.org/dist/2.9.3/Chart.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
+		<script src="https://www.chartjs.org/samples/latest/utils.js"></script>
+	</head>
+	<body>
+	<canvas id='demoCanvas'></canvas>
+	<script>
+		function main(){
+			//alert("Generando")
+			var ctx = document.getElementById('demoCanvas').getContext('2d');
+			ctx.canvas.width = 300;
+			ctx.canvas.height = 100;
+	
+			var mydata = [
+				{t:new Date(1591110389 * 1000),y:100},
+				{t:new Date(1591111389 * 1000),y:100},
+				{t:new Date(1591112389 * 1000),y:100},
+				{t:new Date(1591113389 * 1000),y:100}
+			]
+			var chart = new Chart(ctx, {
+				data: {
+					datasets:[{
+						borderColor:'red',
+						label: "cpu",
+						data: mydata,
+						type:'line',
+						pointRadius:0,
+						fill:false,
+						lineTension:0,
+						borderWidth: 2,
+					}]
+				},
+				options: {
+					scales: {
+						xAxes: [{
+							type: 'time',
+							distribution: 'series',
+							time:{
+								unit:'minute'
+							}
+						}]
+					}
+				}
+			})
+		}
+
+	window.onLoad = main()
+	</script>
+	</body>
+</html>

@@ -51,16 +51,16 @@ function deploy_list(container){
 function deploy_status(parent,idNamespace,name){
 	/* informa del estado de un deploy */
 	$(parent).empty()
-	$(parent).append("<div id='vs1status' class='flex col uno'></div>")
+	$(parent).append("<div id='vs1' class='flex col uno'></div>")
 	ajax_GET('/v1/app/namespace/' + idNamespace + '/deployment/' + name + '/status')
 	.then((data)=> {
 
-		printTitle("#vs1status","Detalle")
-		printText("#vs1status","Nombre",azar(),data.metadata.name)
-		printText("#vs1status","Namespace",azar(),data.metadata.namespace)
-		printText("#vs1status","Fecha Creaci&oacute;n",azar(),data.metadata.creationTimestamp)
+		printTitle("#vs1","Detalle")
+		printText("#vs1","Nombre",azar(),data.metadata.name)
+		printText("#vs1","Namespace",azar(),data.metadata.namespace)
+		printText("#vs1","Fecha Creaci&oacute;n",azar(),data.metadata.creationTimestamp)
 
-		printTitle("#vs1status","Replicas")
+		printTitle("#vs1","Replicas")
 		var c=[ {name:'solicitadas',width:'100px'},
 				{name:'act.',width:'100px'},
 				{name:'disp.',width:'100px'},
@@ -70,11 +70,12 @@ function deploy_status(parent,idNamespace,name){
 			data.status.updatedReplicas,
 			data.status.availableReplicas,
 			data.status.unavailableReplicas]]
-		printTableSimple('#vs1status',"Replicas",c,a)
+		//printStaticTable("#vs1",c,a)
+		printTableSimple('#vs1',"Replicas",c,a)
 
 		// Estrategia
 		if(data.spec.strategy.type == 'RollingUpdate'){
-			printText("#vs1status","Estrategia",azar(),'RollingUpdate: ' + 
+			printText("#vs1","Estrategia",azar(),'RollingUpdate: ' + 
 						data.spec.strategy.rollingUpdate.maxUnavailable +
 						' max. no disponible / ' +
 						data.spec.strategy.rollingUpdate.maxSurge +
@@ -88,70 +89,42 @@ function deploy_status(parent,idNamespace,name){
 }
 
 function deploy_apply(){
-	/* llama a la API para aplicar el deploy */
+	/* llama a la API para actualizar el deploy */
 
 	/* Armamos el Json */
 	data = {
 		fibercorpID: $("#fibercorpID").val(),
 		deployName: $("#deployName").val(),
+		containerName: $("#containerName").val(),
+		image: $("#image").val(),
 		replicas: $("#replicas").val(),
-		containers:[],
-		volumes:[]
+		resources:{
+			cpu: $("#cpu").val(),
+			mem: $("#mem").val()
+		},
+		args:[],
+		envs:[],
+		volumes:[],
+		services:[]
 	}
-	/* Los containers */
-	$("[containers]").each(function(){
-		var id = $(this).attr('id')		/* ID que poseen todos los elementos del container */
-		var container = {	name:$("#name_" + id).val(),
-							image:$("#image_" + id).val(),
-							cpu:$("#cpu_" + id).val(),
-							mem:$("#mem_" + id).val(),
-							args:[],
-							envs:[],
-							discs:[],
-							services:[]}
-		
-		/* Los argumentos */
-		$(this).find("[args]").each(function(){
-			$(this).find(":input").each(function(){
-				if($(this).attr('name'))
-					container.args.push($(this).val())
-			})
+	/* Los argumentos */
+	$("[args]").each(function(){
+		$(this).find(":input").each(function(){
+			if($(this).attr('name'))
+				data.args.push($(this).val())
 		})
-		/* Los environment */
-		$(this).find("[envs]").each(function(){
-			var linea='{'
-			$(this).find(":input").each(function(){
-				if($(this).attr('name'))
-					linea += '"' + $(this).attr('name') + '":"' + $(this).val() + '",'
-			})
-			linea = linea.slice(0, -1) + '}'
-			container.envs.push(JSON.parse(linea))
-		})
-
-		/* los volumenes */
-		$(this).find("[mounts]").each(function(){
-			var linea='{'
-			$(this).find(":input").each(function(){
-				if($(this).attr('name'))
-					linea += '"' + $(this).attr('name') + '":"' + $(this).val() + '",'
-			})
-			linea = linea.slice(0, -1) + '}'
-			container.discs.push(JSON.parse(linea))
-		})
-
-		/* Los Puertos */
-		$(this).find("[ports]").each(function(){
-			var linea='{'
-			$(this).find(":input").each(function(){
-				if($(this).attr('name'))
-					linea += '"' + $(this).attr('name') + '":"' + $(this).val() + '",'
-			})
-			linea = linea.slice(0, -1) + '}'
-			container.ports.push(JSON.parse(linea))
-		})
-		data.containers.push(container)
 	})
-	/* Los volume */
+	/* Los environment */
+	$("[envs]").each(function(){
+		var linea='{'
+		$(this).find(":input").each(function(){
+			if($(this).attr('name'))
+				linea += '"' + $(this).attr('name') + '":"' + $(this).val() + '",'
+		})
+		linea = linea.slice(0, -1) + '}'
+		data.envs.push(JSON.parse(linea))
+	})
+	/* los volumenes */
 	$("[volumes]").each(function(){
 		var linea='{'
 		$(this).find(":input").each(function(){
@@ -161,7 +134,36 @@ function deploy_apply(){
 		linea = linea.slice(0, -1) + '}'
 		data.volumes.push(JSON.parse(linea))
 	})
-
+	/* Los servicios */
+	$("[services]").each(function(){
+		var id = $(this).attr('id')
+		var service = '{"name":"' + $("#name_" + id).val() +
+				  '","type":"' + $("#type_" + id).val() + '"'
+		switch($("#type_" + id).val()){
+			case 'out':
+			case 'in':
+				service += ',"ports":['
+				$(this).find("[ports]").each(function(){
+					var idport = $(this).attr('id')
+					service += '{"name":"' + $("#name_" + idport).val() +
+							    '","protocol":"' + $("#protocol_" + idport).val() +
+								'","port":"' + $("#port_" + idport).val() + '"},'
+				})
+				service = service.slice(0, -1) + ']}'
+				break
+			case 'url':
+				service += ',"urls":['
+				$(this).find("[urls]").each(function(){
+					var idport = $(this).attr('id')
+					service += '{"url":"' + $("#url_" + idport).val() +
+							    '","path":"' + $("#path_" + idport).val() +
+								'","port":"' + $("#port_" + idport).val() + '"},'
+				})
+				service = service.slice(0, -1) + ']}'
+		}
+		//alert(service)
+		data.services.push(JSON.parse(service))
+	})
 
 	//alert(JSON.stringify(data))
 	$(".solapa_body").append(JSON.stringify(data))
@@ -180,13 +182,18 @@ function deploy_despliegue(parent,idNamespace,name){
  	 * modificaciones de los despliegues */
 	$(parent).empty()
 	var a = "<div id='section' class='flex col uno overflow-y'>" +
-           	"<div id='vs1' class='flex col uno padding_not_r overflow-y'></div></div>"
+			 	"<div class='flex row cero'>" +
+			 		"<div id='vs1' class='flex col uno padding'></div>" +
+			 		"<div id='vs2' class='flex col uno padding'></div>" + 
+			 	"</div>"+
+            	"<div id='vs3' class='flex col uno padding'></div>" +
+           	 	"<div id='vs4' class='flex col uno padding'></div>" +
+           	 	"<div id='vs5' class='flex col uno padding'></div>" +
+           	 	"<div id='vs6' class='flex col uno padding'></div></div>"
 	if(idNamespace != null){
-		/* Es una modificacion */
 		a += "<div id='actions' class='actions'></div>"
 		$(parent).append(a)
 	} else {
-		/* Es un alta */
 		a += "<div style='text-align: center;'>" +
 			 "<button id='nuevoDeploy' class='alta_button'>Agregar</button></div>"
 		$(parent).append(a)
@@ -210,17 +217,35 @@ function deploy_despliegue(parent,idNamespace,name){
 	}
 	promise.then(data=>{
 		if(idNamespace != null){
-			$('#vs1').append("<input type='hidden' id='fibercorpID' value='" + data.fibercorpID + "'>")
-			$('#vs1').append("<input type='hidden' id='idNamespace' value='" + idNamespace + "'>")
+			$(parent).append("<input type='hidden' id='fibercorpID' value='" + data.fibercorpID + "'>")
+			$(parent).append("<input type='hidden' id='idNamespace' value='" + idNamespace + "'>")
 			printText('#vs1',"Nombre",'deployName',data.deployName)
-			printText('#vs1',"Replicas",'replicas',data.containerName)
+			printText('#vs2',"Nombre",'containerName',data.containerName)
 		} else {
 			printInput('#vs1',"Nombre",'deployName','')
-			printInput('#vs1',"Replicas",'replicas','')
+			printInput('#vs2',"Nombre",'containerName','')
 		}
+		printInput('#vs1',"Replicas",'replicas',data.replicas)
+		printInput('#vs2',"Imagen",'image',data.image)
+		printInput('#vs2',"Cpu",'cpu',data.resources.cpu)
+		printInput('#vs2',"Memoria",'mem',data.resources.mem)
+		printList('#vs3','Argumentos',"args",[{name:'arg',label:'',length:200,type:'input'}],
+				  data.args)
 
-		printList("#vs1",'Volumenes',"volumes",
+		printList('#vs4','Variables',"envs",
+				  [{name:'name',label:'nombre',length:300,type:'input'},
+				   {name:'type',label:'tipo',length:100,type:'select',
+					options:[
+						{value:'text',label:'text'},
+						{value:'secret',label:'secret'}
+					]},
+					{name:'key',label:'Key',length:100,type:'input', selectName:'type',option:'secret'},
+					{name:'secret',label:'Secret',length:100,type:'input', selectName:'type',option:'secret'},
+					{name:'value',label:'Valor',length:100,type:'input', selectName:'type',option:'text'}],
+				   data.envs)
+		printList("#vs5",'Volumenes',"volumes",
 					[{name:'name',label:'nombre',length:100,type:'input'},
+					{name:'path',label:'Montaje',length:180,type:'input'},
 					{name:'type',label:'tipo',length:100,type:'select',
 					options:[	{value:'pvc',label:"pvc"},
 								{value:'emptydir',label:"EmptyDir"},
@@ -230,36 +255,45 @@ function deploy_despliegue(parent,idNamespace,name){
 					 selectName:'type',option:'pvc'},
 					{name:'Secret',label:'Secret',length:60,type:'input',
 					 selectName:'type',option:'secret'}],
-					data.volumes,false)
+					data.volumes)
 
-		var montajes = [{name:'name',label:'Nombre Volumen',length:200,type:'input'},
-				 		{name:'mountPath',label:'Punto de Montaje',length:200,type:'input'}]
+		printList("#vs6",'Servicios',"services",
 
-		printList('#vs1',"Contenedores",'containers',
-			[{name:'name',label:'Nombre',length:100,type:'input'},
-			{name:'image',label:'Imagen',length:100,type:'input'},
-	/*		{name:'cpu',label:'Cpu',length:100,type:'input'},
-			{name:'mem',label:'Memoria',length:100,type:'input'}, */
-			{name:'args',label:'Argumentos',type:'list',data:[
-				{name:'arg',label:'',length:300,type:'input'}]},
-			{name:'envs',label:'Variables de Entorno',type:'list',data:[
-				{name:'name',label:'Nombre',length:300,type:'input'},
-				{name:'type',label:'Tipo',length:300,type:'select', options:[
-						{value:'text',label:'text'},
-						{value:'secret',label:'secret'}]},
-				{name:'key',label:'Key',length:100,type:'input',
-				 	selectName:'type',option:'secret'},
-				{name:'secret',label:'Secret',length:100,type:'input',
-					selectName:'type',option:'secret'},
-				{name:'value',label:'Valor',length:100,type:'input',
-					selectName:'type',option:'text'}]},
-			{name:'mounts',label:'Discos',type:'list',data:montajes},
-			{name:'ports',label:'puertos',type:'list',data:[
-				{name:'port',label:'Puerto',length:200,type:'input'},
-				{name:'protocol',label:'Protocolo',length:200,type:'select', options:[
-						{value:'TCP',label:'TCP'},
-						{value:'UDP',label:'UDP'}]}
-		 	]}], data.containers,false)
+        [ {name:'name',label:'nombre',length:100,type:'input'},
+          {name:'type',label:'tipo',length:100,type:'select',
+		   options:[	{value:"in",label:"interna"},
+						{value:"out",label:"externa"},
+						{value:"url",label:"URL"}
+				    ]},
+          {name:'ip',label:'ip',length:60,type:'input',selectName:'type',option:'out'},
+          {name:'ports',label:'ports',length:60,type:'list',selectName:'type',option:'in',
+		   data:[	{name:'name',label:'nombre',length:60,type:'input'},
+                    {name:'protocol',label:'protocol',length:60,
+                     type:'select',options:[
+							{label:"tcp",value:"TCP"},
+							{label:"udp",value:"UDP"}
+					]},
+                     {name:'port',label:'puerto',length:60,type:'input'}
+			]},
+           {name:'ports',label:'ports',length:60,type:'list',selectName:'type',option:'out',
+		    data:[	{name:'name',label:'nombre',length:60,type:'input'},
+                    {name:'protocol',label:'protocol',length:60,
+                     type:'select',options:[
+						{label:"tcp",value:"TCP"},
+						{label:"udp",value:"UDP"}
+				 	 ]},
+                    {name:'port',label:'puerto',length:100,type:'input'}
+				]},
+                 {name:'urls',label:'url',length:150,type:'list',selectName:'type',option:'url',
+				  data:[	{name:'url',label:'',length:200,type:'input'},
+					 		{name:'path',label:'',length:200,type:'input'},
+					 		{name:'port',label:'',length:200,type:'select',
+							 options:[
+								{value:"80", label:"http"},
+								{value:"443", label:"https"}
+							]}
+					   ]
+				  }], data.services)
 	})
 
 }
@@ -292,7 +326,7 @@ function deploy_container_status(parent,data){
 function deploy_pod_status(parent,data){
 	var id = azar()
 	var lineas = new Array
-	$(parent).append("<div id='p1" + id + "' class='flex-col padding_not_r uno'></div>")
+	$(parent).append("<div id='p1" + id + "' class='flex-col padding uno'></div>")
 	printTitle('#p1'+id,"POD: " + data.metadata.name)
 	printText('#p1'+id,"Creado",azar(),data.metadata.creationTimestamp)
 	printText('#p1'+id,"Face",azar(),data.status.phase)

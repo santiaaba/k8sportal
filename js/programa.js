@@ -50,20 +50,19 @@ function menu_click(f,g,h){
 	})
 }
 
+/*
 function make_menu(){
 	$("#menu1")
+	.append("<div id='m-namespace'><img src='img/capas.png'><span>dockers</span></div>")
 	.append("<div id='m-namespace'><img src='img/capas.png'></div>")
 	.append("<div id='m-deploy'><img src='img/ship.png'></div>")
-	.append("<div id='m-can'><img src='img/can.png'></div>")
 	.append("<div id='m-volume'><img src='img/storage.png'></div>")
 	.append("<div id='m-secret'><img src='img/key.png'></div>")
-
-	$("#menuplus")
-	.append("<div id='m-plus'>+</div>")
-	plus_init('#m-plus')
+	.append("<div id='m-service'><img src='img/service.png'></div>")
+	.append("<div id='m-networkPolicy'><img src='img/netPol.png'></div>")
 
 	$("#m-namespace").on('click', function(){
-		menu_click(namespace_data,namespace_show,['id'])
+		menu_click(namespace_list,namespace_sections,['id'])
 	})
 
 	$("#m-deploy").on('click', function(){
@@ -74,19 +73,26 @@ function make_menu(){
 		menu_click(volume_list,volume_sections,['idNamespace','name'])
 	})
 
-	$("#m-can").on('click', function(){
-		menu_click(volume_list,can_sections,['idNamespace','name'])
+	$("#m-networkPolicy").on('click', function(){
+		alert("Implementar")
 	})
 
 	$("#m-secret").on('click', function(){
 		menu_click(secret_list,secret_sections,['idNamespace','name'])
 	})
-}
 
+	$("#m-service").on('click', function(){
+		menu_click(service_list,service_sections,['idNamespace','name'])
+	})
+
+	/* Para el menu plus
+	$("#menuplus")
+	.append("<div id='m-plus'>+</div>")
+	plus_init('#m-plus')
+}
+*/
 
 function main(){
-	/* Verificamos usuario logueado */
-	//alert(document.cookie)
 	$.ajaxSetup({ cache: false });
 
 	if(getCookie("username") == ""){
@@ -102,9 +108,39 @@ function main(){
 		logout()
 	})
 
-	make_menu()
+	main_menu_make('main_menu_w',
+		[{type:'submenu',name:'Maquina virtual',img:'img/vm.png',submenu:[],addButton: null},
+		{type:'submenu',name:'Hosting Web',img:'img/hostingweb.png',submenu:[],addButton:null},
+		{type:'submenu',name:'Almacenamiento',img:'img/s3.png',submenu:[],addButton:null},
+		{type:'submenu',name:'Docker',img:'img/ship.png',submenu:[
+			{ name: 'Namespace',
+			  img: 'img/capas.png',
+			  click: null
+			},
+			{ name: 'Deployment',
+			  img: 'img/deployment.png',
+			  click: function(){k8s_deployments('content')}
+			},
+			{ name: 'Volumes',
+			  img: 'img/volume.png',
+			  click: function(){k8s_volums('content')}
+			},
+			{ name: 'Security',
+			  img: 'img/key.png',
+			  click: null
+			},
+			{ name: 'Services',
+			  img: 'img/services.png',
+			  click: function(){k8s_services('content')}
+			}
+			],addButton: k8s_make_agregar},
+		{type:'submenu',name:'Base de datos',img:'img/database.png',submenu:[],addButton:null},
+		{type:'submenu',name:'IoT',img:'img/iot.png',submenu:[],addButton:null},
+		{type:'submenu',name:'Block Chain',img:'img/blockchain.png',submenu:[],addButton:null}])
 
 	$(".contenido").empty()
+
+	menu_agregar = new MenuAgregar
 
     $(window).on('resize',function(){resize_ajuste()})
 	resize_ajuste()
@@ -238,7 +274,7 @@ function resize_ajuste(){
 	/* Ajusta algunas cuestiones del responsive si cambia
  	   el tamano del navegador */
 	$(".wrp1").height($(window).height() - 50)
-    //$(".parte_seguimientos").height($(window).height() - 130)
+	$("#content").height($(window).height() - 50)
 }
 
 function vertical_list_show(padre,data,column,onclick,params){

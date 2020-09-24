@@ -1,51 +1,16 @@
-function printSection(parent,type,direction,flex,structure){
-	/* parent:		 especifica el elemento DOM que la contendra
-	   type:		 especifica si es "skeletor" (solo para ordenar)
-  					 o es "data" (posee datos)
-	   direction:	 cuando es "skeletor" indica la direccion del flex de css
-					 [row,col]
-	   flex:		 La relacion. uno, dos, tres en css
-	   structure:	 En formato Json, detalla como es la estructura dentro de la
-					 seccion cuando type es data. Cada elemento posee tres campos:
-					    flex: indica la direccion Flex css
-					    children: indica los elementos dentro del Flex
-					    id: Un id unico en todo el sitio
-	*/
-	function printStruct(parent,data){
-		/* Imprime de forma recursiva la estructura */
-		$("#"+parent)
-		.append("<div id='" + data.id + "' class='section_struct " + data.flex + "'></div>")
-		data.children.forEach(function(v){
-			printStruct(data.id,v)
-		})
-	}
-	  
-	var id = azar()
-	if(type == "skeletor"){
-		$('#' + parent)
-		.append("<div id='" + id + "' class='section_skeletor " + direction + " " + flex + "'></div>")
-	} else {
-		$('#' + parent)
-		.append("<div id='" + id + "' class='section_data " + direction + " " + flex + "'></div>")
-		printStruct(id,structure)
-	}
-	return id
-}
-
 function printTitle(parent,name){
-	$("#"+parent).append("<div class='title v_center'>" + name + "</div>")
+	$(parent).append("<div class='title v_center'>" + name + "</div>")
 }
 
 function printText(parent,label,id,data){
-	$("#"+parent)
+	$(parent)
 	.append("<div class='info'><div class='label'>" +
 			label + "</div><div class='data'>" + data +
 			"<input id='" + id + "' type='hidden' value='" + data + "'>" +
 			"</div></div>")
 }
 
-function printSelect(parent,label,input_name,options,f_onchange){
-
+function printSelect(parent,label,input_name,options,data){
 	var html = "<div class='info'><div class='label'>" +
 			   label + "</div><div class='data'>" +
 			   "<select id='" + input_name + "'>"
@@ -56,12 +21,7 @@ function printSelect(parent,label,input_name,options,f_onchange){
 			  + ">" + v.name + "</option>"
 	})
 	html +=		 "</select></div></div>"
-	$("#"+parent).append(html)
-	if(f_onchange != null){
-		$("#" + input_name).on('change',function(){
-			f_onchange("#" + input_name)
-		})
-	}
+	$(parent).append(html)
 }
 
 function printAttibutes(parent,name,grupo,datos){
@@ -88,7 +48,7 @@ function printAttibutes(parent,name,grupo,datos){
 	}
 	
 	var id = azar()
-	$("#"+parent)
+	$(parent)
 	.append("<div class='input'>" +
 				"<div class='flex-col'>" +
 					"<div class='flex-row' style='margin-bottom:10px'>" +
@@ -110,7 +70,7 @@ function printAttibutes(parent,name,grupo,datos){
 	}
 }
 
-function printList(parent,name,grupo,campos,datos,unico){
+function printList(parent,name,grupo,campos,datos){
 	/* Presenta un formulario compuesto por campos
 	 * para gestionar datos que tienen comportamiento
 	 * de listado. Por ejemplo... listado de volumens */
@@ -131,9 +91,9 @@ function printList(parent,name,grupo,campos,datos,unico){
 							   + $(select).attr('id') +
 							   "' class='flex-col tab padding'></div>")
 						if(datos != null)
-							printList("parte_" + idparte,w.label,w.name,w.data,datos[w.name],false)
+							printList("#parte_" + idparte,w.label,w.name,w.data,datos[w.name])
                         else
-							printList("parte_" + idparte,w.label,w.name,w.data,null,false)
+							printList("#parte_" + idparte,w.label,w.name,w.data,null)
 					} else {
 						select.after("<div class='flex-row' id='campo_" +
 								 idcampo + "'" +
@@ -154,7 +114,7 @@ function printList(parent,name,grupo,campos,datos,unico){
 		var idlinea = azar()
 		var parte = "parte_" + azar()
 		$("#listado_" + id)
-		.append("<div id='" + idlinea + "' " + grupo + " class='flex-col'>" + 
+		.append("<div id='" + idlinea + "' " + grupo + " class='flex-col padding'>" + 
 				"<div id='" + parte + "' class='flex-row'></div></div>")
 		$.each(campos,function(i,v){
 			var idcampo = azar()
@@ -163,7 +123,7 @@ function printList(parent,name,grupo,campos,datos,unico){
 				switch(v.type){
 					case 'input':
 						$("#" + parte)
-						.append("<div class='flex-row linea_campo' id='campo_" +
+						.append("<div class='flex-row' id='campo_" +
 								idcampo + "'><div class='label'>" + v.label +
 								"</div><input name='" + v.name + "' style='width:" + v.length +
 								"px' id='" + v.name + "_" + idlinea + "'></div>")
@@ -188,7 +148,7 @@ function printList(parent,name,grupo,campos,datos,unico){
 						})
 						$("#" + parte)
 						/* Armamos el SELECT */
-						.append("<div class='flex-row linea_campo' id='campo_" + idcampo +
+						.append("<div class='flex-row' id='campo_" + idcampo +
 								"'><div class='label'>" + v.label +
 								"</div><select name='" + v.name +
 								"' class='plus' style='width:" +
@@ -212,67 +172,59 @@ function printList(parent,name,grupo,campos,datos,unico){
 								"' class='flex-row tab padding'></div></div>")
 						if(datos != null){
 							//alert("Hay datos")
-							printList(partelist,v.label,v.name,v.data,datos[v.name],false)
+							printList("#" + partelist,v.label,v.name,v.data,datos[v.name])
 						} else
-							printList(partelist,v.label,v.name,v.data,null,false)
+							printList("#" + partelist,v.label,v.name,v.data,null)
 						break
 				}
 			}
 		})
-		if(!unico){
-			$("#" + parte).append("<button id='delete_" + idlinea + "'>-</button>")
-			$("#delete_" + idlinea).on("click",function(){
-				$("#" + idlinea).remove()
-			})
-		}
+		$("#" + parte).append("<button id='delete_" + idlinea + "'>-</button>")
+		$("#delete_" + idlinea).on("click",function(){
+			$("#" + idlinea).remove()
+		})
+
 	}
 
 	//alert(JSON.stringify(datos))
 	var id = azar()
-	var contenido = "<div class='input'>" +
+	$(parent)
+	.append("<div class='input'>" +
 				"<div class='flex-col'>" +
 					"<div class='flex-row' style='margin-bottom:10px'>" +
 						"<div class='uno title v_center'>" + name + "</div>" +
-						"<div class='initial v_center flex'>"
-	if(!unico)
-		contenido += "<button id='button_" + id + "' class='add_button'>+</button>"
-	contenido += "</div></div><div id='listado_" + id + "' class='flex-col'></div>" +
-				 "</div></div>"
-	$("#" + parent).append(contenido)
-	if(!unico){
-		$("#button_" + id).on("click",function(){
-			add_line(grupo,'#listado_' + id,campos,null)
-		})
-	} else {
-		if(datos == null)
-			add_line(grupo,'#listado_' + id,campos,null)
-	}
+						"<div class='initial v_center flex'><button id='button_" + id +
+						"' class='add_button'>+</button></div>" +
+					"</div><div id='listado_" + id + "' class='flex-col'></div>" +
+				"</div>" +
+			"</div>")
+	$("#button_" + id).on("click",function(){
+		add_line(grupo,'#listado_' + id,campos,null)
+	})
 
 	/* Cargamos datos pasados */
-	
 	if(datos != null){
-		if(!unico){
-			datos.forEach(function(v,i){
-				add_line(grupo,'#listado_' + id,campos,v)
-			})
-		} else {
-			add_line(grupo,'#listado_' + id,campos,datos)
-		}
+		datos.forEach(function(v,i){
+			add_line(grupo,'#listado_' + id,campos,v)
+		})
 	}
 }
 
 function printInput(parent,label,id,data){
-	$("#" + parent)
+	$(parent)
 	.append("<div class='info'><div class='label'>" +
 			label + "</div><div class='data'><input id='" +
 			id + "' value='" + data + "'>" +
 			"</div></div>")
 }
 
-function printTableSimple(parent,columns,data){
+function printTableSimple(parent,label,columns,data){
 	/* Imprime una tabla simple */
 	a = azar()
-	$("#"+parent).append("<TABLE id='table_" + a + "' class='static_table' border='1'></TABLE>")
+	$(parent).append("<div class='info'><div class='label'>" +
+					 label + "</div><div class='data'>" +
+					 "<TABLE id='table_" + a +
+					 "' class='static_table' border='1'></TABLE>")
 	fila=''
 	$.each(columns,function(i,v){
 		fila += "<TH style='width:" + v.width + "'>" + v.name + "</TH>"
@@ -405,10 +357,10 @@ function printTable(padre,columnas,data,onclick,onclickid,colores,anchos,ord_col
 				"</div><div style=\"flex: 1 1\">" + value.nombre + "</div>")
 		border = ';border-left: 1px solid #8a8484'
 		$("#ord_" + value.nombre + "_up").on("click",function(){
-			printList(padre,columnas,data,onclick,onclickid,colores,anchos,value.dato,1,false)
+			printList(padre,columnas,data,onclick,onclickid,colores,anchos,value.dato,1)
 		})
 		$("#ord_" + value.nombre + "_down").on("click",function(){
-			printList(padre,columnas,data,onclick,onclickid,colores,anchos,value.dato,0,false)
+			printList(padre,columnas,data,onclick,onclickid,colores,anchos,value.dato,0)
 		})
 	})
 
@@ -435,38 +387,4 @@ function printTable(padre,columnas,data,onclick,onclickid,colores,anchos,ord_col
 			onclick(value[onclickid])
 		})
 	})
-}
-
-function format_data_gauge(data){
-	/* Dados datos obtenidos por la api de Prometheus,
-	 * Se pasan a datos con formato que comprende la
-	 * librería dygraphs */
-	var dataf = []
-	i = 0
-	size = data.length
-	for(i=0;i<size;i++){
-		dataf.push([new Date(data[i][0] * 1000),parseFloat(data[i][1])])
-	}
-	return dataf
-}
-
-function format_data_counter(data){
-	/* Dados datos obtenidos por la api de Prometheus,
-	 * Se pasan a datos con formato que comprende la
-	 * librería dygraphs */
-	var dataf = []
-	var prio = null
-	var actual = null
-	i = 0
-	size = data.length
-	for(i=0;i<size;i++){
-		actual = data[i]
-		if (prio != null){
-			dataf.push([new Date(actual[0] * 1000),
-					   (parseFloat(actual[1]) - parseFloat(prio[1])) / (actual[0] - prio[0])
-					   ])
-		}
-		prio = actual
-	}
-	return dataf
 }

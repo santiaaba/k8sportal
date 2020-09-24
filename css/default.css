@@ -67,7 +67,6 @@ div.banner{
 	flex: initial;
 	display: flex;
 	background-color: #3a3a3a;
-	//padding-top:7px;
 	height: 50px;
 	color: white;
 	align-items: center;
@@ -79,6 +78,8 @@ div.banner_img{
 }
 
 div.banner_logout{
+	align-items: center;
+	display:flex;
 	flex:initial;
 	widht:200px;
 }
@@ -106,10 +107,11 @@ div.plus_help{
 
 div.plus_items{
 	flex:initial;
-	width:350px;
+	width:380px;
 	display:flex;
 	flex-direction:column;
 	height:100%;
+	overflow-y:auto
 }
 
 div.plus_add{
@@ -137,14 +139,12 @@ div.plus_add_data{
 	display: flex;
 	flex: 1 1;
 	flex-direction: column;
-	//overflow-y: scroll;
 }
 
 div.plus_item{
 	display:flex;
 	flex-direction:row;
-	margin-left:20px;
-	margin-top:20px;
+	padding:5px;
 }
 div.plus_item:hover{
 	background-color:#0b0821;
@@ -154,6 +154,9 @@ div.plus_img{
 	width:100px;
 	height:100px;
 }
+div.plus_img img{
+	width:80px;
+}
 div.plus_text{
 	flex: 1 1;
 	display:flex;
@@ -161,19 +164,39 @@ div.plus_text{
 }
 div.plus_title{
 	flex: initial;
-	font-size:24px;
+	font-size:20px;
 	font-weight:bold;
 }
 div.plus_detail{
 	flex: 1 1;
-	font-size:18px;
+	font-size:14px;
 }
 
 /************ wrappers ***************/
 
+div.section_skeletor{
+	display:flex;
+	overflow-y:auto;
+}
+
+div.section_data{
+	display:flex;
+	background-color: #fff;
+	color: #333;
+	font-size: 14px;
+	margin: 10px;
+	padding: 6px;
+}
+
+div.section_struct{
+	display:flex;
+	flex: 1 1;
+	padding:5px;
+}
+
 div.wrapper{
 	display:flex;
-	background-color: #101010;
+	background-color: #202020;
 	display-direction:row;
 	width:100%
 }
@@ -209,8 +232,20 @@ div.wrapper{
 	flex: 1 1
 }
 
+.dos{
+	flex: 2 1
+}
+
+.tres{
+	flex: 3 1
+}
+
 .padding {
 	padding:10px;
+}
+
+.padding_not_r {
+	padding:10px 0px 10px 10px;
 }
 
 .overflow-y {
@@ -226,27 +261,46 @@ div.wrp1{
 	display: flex;
 	flex:1 1;
 	flex-direction:row;
-	//height:100%;
 }
 
 div.content{
 	flex: 1 1;
 	display:flex;
-	flex-direction:row;
+	flex-direction:column;
 	color: #eeeeee;
-	height:100%;
+	padding: 6px;
+}
+
+div.content_menu{
+	display: flex;
+	flex: initial;
+	height:35px;
+}
+
+div.content_data{
+	overflow-y:auto;
+	display: flex;
+	flex: 1 1;
+}
+
+div.content_action{
+	display: flex;
+	flex: initial;
+	height: 50px;
+	background-color: #1e165b;
+	justify-content:center;
+	padding: 5px;
 }
 
 div.wrp_vl{
 	flex: initial;
 	width:180px;
 	background-color:#255d5f;
-	//height:100%;
 }
 
 div.wrp_play{
+	display:flex;
 	flex: 1 1;
-	//height:100%;
 	padding-left:10px 10px 0px 10px;
 }
 
@@ -266,45 +320,110 @@ div.vertical_simetric{
 }
 
 /************** Menu *************/
-
 div.menu{
-	flex: initial;
 	display: flex;
-	flex-direction:column;
-	width:90px;
-	background-color:#0b0821;
+	flex-direction: row;
+	width:40px;
+	font-size: 14px;
+}
+div.menu_home{
+	margin-left: 6px;
+	margin-right: 6px;
+	display: flex;
+	align-items: center;
+}
+div.menu_home img {
+	width: 25px;
+}
+div.menu_item{
+	margin-left: 6px;
+	margin-right: 6px;
+	padding-left: 10px;
+	padding-right: 10px;
+	font-size: 14px;
+	display: flex;
+	align-items: center;
+}
+div.menu_select {
+	border-bottom: 2px solid #73d0f4;
+}
+div.menu_item:hover{
+	border-bottom: solid 1px white;
+}
+div.menu_element{
+	font-weight: bold;
+	font-size: 16px;
+	display: flex;
+	align-items: center;
+	margin-left: 6px;
+	margin-right: 6px;
+	padding-left: 10px;
+	padding-right: 10px;
 }
 
-div.menu1{
+/************** Main Menu *************/
+
+div.main_menu{
 	flex: 1 1;
 	display: flex;
 	padding-top:10px;
-	align-items: center;
+	width:200px;
 	flex-direction:column;
 	background-color:#0b0821;
 }
+div.main_menu_submenu{
+	background-color: #1e165b;
+	position: absolute;
+	left:200px;
+	top:50px;
+	width:0px;
+	height:100%;
+}
 
-div.menu1 div{
+div.main_menu_item{
 	display: flex;
-	justify-content:center;
+	justify-content:left;
 	align-items: center;
-	width:60px;
-	height:60px;
-	margin-bottom:20px;
 	color:white;
-	font-weight:bold;
-	font-size:20px;
-	border: solid 1px #0b0821;
+	font-size:15px;
+	padding:10px;
 }
 
-div.menu1 div img {
-	width: 45px;
-	height: 45px;
+div.main_menu_item:hover{
+	background-color: #1e165b;
 }
 
-div.menu1 div:hover{
-	background-color: #ddd;
-	border: solid 1px #007bff;
+div.main_menu_item img {
+	width: 30px;
+	height: 30px;
+	margin-right:10px;
+}
+
+div.main_submenu_item{
+	display: flex;
+	justify-content:left;
+	align-items: center;
+	color:white;
+	font-size:15px;
+	padding:10px;
+}
+
+div.main_submenu_item:hover{
+	background-color: #2d1e77;
+}
+
+div.main_submenu_item img {
+	width: 30px;
+	height: 30px;
+	margin-right:10px;
+}
+
+div.addButton{
+	display:flex;
+	background-color:red
+}
+
+div.addButton img{
 }
 
 div.menuplus{
@@ -358,7 +477,7 @@ div.listado{
 	border-color: black;
 	width: auto;
 	height:100%;
-	font-size:16px;
+	font-size:14px;
 	border-radius:6px;
 }
 
@@ -372,7 +491,6 @@ div.listado_contenido{
 
 div.listado_cabecera{
 	display:flex;
-	//justify-content: center;
 	background-color:#555;
 	font-weight:bold;
 	color: white;
@@ -383,10 +501,9 @@ div.listado_cabecera{
 div.listado_cabecera div{
 	flex: initial;
 	/*width: 150px;*/
-	height:40px;
-	font-size:16px;
+	height:20px;
+	font-size:14px;
 	padding-left:2px;
-	padding-top: 2px;
 	border-right-style: solid;
 	border-right-color: #555;
 	border-right-width: 1px;
@@ -474,7 +591,7 @@ button{
 /******* Vertical list *************/
 div.vertical_list{
 	background-color:#255d5f;
-	font-size: 16px;
+	font-size: 14px;
 	color: white;
 }
 div.vertical_list div{
@@ -489,11 +606,9 @@ div.vertical_list div:hover{
 
 /*********** Solapas **************/
 div.solapa{
-	//background-color:red;
 	display:flex;
 	flex-direction:column;
-	width:100%;
-	height:100%
+	flex: 1 1
 }
 
 div.solapa_head{
@@ -501,7 +616,6 @@ div.solapa_head{
 	display: flex;
 	flex-direction:row;
 	height:40px;
-	//background-color:green;
 	font-size:18px;
 	width:100%;
 }
@@ -531,29 +645,27 @@ div.solapa_body{
 
 .title{
 	display:flex;
-	font-size:18px;
+	font-size:16px;
 	font-width:bold;
-	height:40px;
-	background-color:#525252;
 	font-weight:bold;
-	padding: 0px 20px;
 }
 
 .info{
 	display:flex;
 	flex-direction:row;
-	margin:4px 0px;
-//	height: 40px;
+	margin:10px 10px;
 }
 .label{
+	display:flex;
+	align-items:center;
 	flex:1 1;
-	font-size:18px;
-	padding:0px 10px;
+	font-size:14px;
+	font-weight: bold;
+	margin-right: 10px;
 }
 .data{
-	flex:3 1;
-	font-size:18px;
-	color: #fff;
+	flex:1 1;
+	font-size:14px;
 }
 .tab{
 	margin-left:40px;
@@ -562,12 +674,12 @@ div.solapa_body{
 /**************** INPUT ****************/
 
 input{
-	padding: 3px 10px;
-	font-size: 16px;
+	padding: 3px 5px;
+	font-size: 14px;
 }
 select{
 	padding: 3px 10px;
-	font-size: 16px;
+	font-size: 14px;
 }
 
 /***************************************/
@@ -575,10 +687,10 @@ select{
 /************** ADD INPUT *************/
 div.input{
 	display:flex;
-	padding:10px;
+	padding:10px 0px 10px 10px;
+	flex: 1 1;
 	flex-direction:column;
 	font-size:18px;
-	//border: solid 1px #007bff;
 }
 div.flex-col{
 	display:flex;
@@ -619,16 +731,18 @@ table.static_table{
 }
 
 table.static_table th{
-	background-color: #007bff;
-	font-size: 16px;
-	border: solid 1px #007bff;
-	padding:6px;
+	background-color: #1e165b;
+	font-size: 14px;
+	border: solid 1px #1e165b;
+	padding:3px 10px;
 }
 
 table.static_table td{
-	font-size: 16px;
+	font-size: 14px;
 	border: solid 1px #007bff;
-	padding:6px;
+	padding:6px 10px;
+	font-size:14px;
+	color: #333;
 }
 
 div.section{
@@ -658,7 +772,11 @@ div.actions div{
 
 div.actions div:hover{
 	background-color: #255d5f;
+}
 
+div.linea_campo {
+	margin-right:10px;
+}
 /********************************/
 div.listado{
 	display:flex;
@@ -669,7 +787,7 @@ div.listado{
 	width: auto;
 	height:100%;
 	font-family: "Trebuchet MS", Helvetica, sans-serif
-    font-size: 18px;
+    font-size: 14px;
 	border-radius:6px;
 }
 
@@ -683,7 +801,6 @@ div.listado_contenido{
 
 div.listado_cabecera{
 	display:flex;
-	//justify-content: center;
 	background-color:#555;
 	font-weight:bold;
 	color: white;
@@ -693,8 +810,8 @@ div.listado_cabecera{
 div.listado_cabecera div{
 	flex: initial;
 	/*width: 150px;*/
-	height:40px;
-	font-size:16px;
+	height:25px;
+	font-size:14px;
 	padding-left:2px;
 	padding-top: 2px;
 	border-right-style: solid;
@@ -710,7 +827,7 @@ div.listado_fila{
 }
 
 div.listado_fila:hover{
-	background-color: #ffbf00 ;
+	background-color: #1e165b ;
 	color:#eee;
 }
 
@@ -721,4 +838,38 @@ div.listado_fila div{
 	border-right-color: #555;
 	border-right-width: 1px;
 	padding: 10px;
+}
+
+/******************************/
+div.micro_chart{
+	display:flex;
+	flex-direction:row;
+}
+div.micro_chart div{
+	flex: 1 1
+}
+
+
+/*********** ActionBar ******************/
+div.actionBar{
+	display:flex;
+	flex-direction:row;
+	align-items: center;
+	justify-content: center;
+}
+
+div.actionBar div{
+	display:flex;
+	align-items: center;
+	justify-content: center;
+	width: 60px;
+	height: 40px;
+	margin-left:6px;
+}
+div.actionBar div img{
+	width:30px
+}
+
+div.actionBar div:hover{
+	background-color:#2d1e77;
 }

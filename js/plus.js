@@ -52,14 +52,18 @@ function plus_make(){
 					'<p>Un volumen pertenece al namespace en el que se lo cree. Solo las ' +
 					'aplicaciones dentro de ese namespace puede ver el volumen creado</p>',
 			   f:crear_volumen})
-	data.push({title:'Secret',img:'secret.png',
+	data.push({title:'Secret',img:'key--v3.png',
 			   detail:'Crear un nuevo Secreto',
 			   help:'<p>Un secreto es la forma de...</p> ',
 			   f:crear_secreto})
 	data.push({title:'Enlatado',img:'can.png',
 			   detail:'Crear un nuevo enlatado',
-			   help:'UnEnlatado es...',
+			   help:'Un Enlatado es...',
 			   f:null})
+	data.push({title:'Servicios',img:'service.png',
+			   detail:'Crear un nuevo servicio',
+			   help:'Un Servicio permite que se acceda a tus despliegues de forma interna o externa.',
+			   f:crear_servicio})
 	$("#plus").append("<div id='plus_items' class='plus_items'></div>")
 	$.each(data,function(index,value){
 		var id=azar()
@@ -90,12 +94,13 @@ function plus_select(f,image,help){
 	},400)
 }
 
+/*
 function plus_commit(parent,elementType,namespaceField){
 	/* parent: Es el contenedor del html generado
 	 * elementType puede ser: namespace, deployment, service, volume, can
 	 * namespaceField: Es el id del input/select del cual id del namespace
 	*/
-	
+/*	
 	$(parent).append("<button id='submit'>Agregar</button>")
 	$('#submit').on('click',function(){
 		var data = make_json(elementType)
@@ -118,6 +123,8 @@ function plus_commit(parent,elementType,namespaceField){
 		})
 	})
 }
+*/
+
 function crear_deployment(){
 	deploy_despliegue("#plus_add_data",null,null)
 }
@@ -145,6 +152,10 @@ function crear_secreto(){
 	secret_despliegue("#plus_add_data",null,null)
 }
 
+function crear_servicio(){
+	service_despliegue("#plus_add_data",null,null)
+}
+
 function crear_volumen(){
 	/* Opciones de momento estaticas */
 	$(".plus_add_data")
@@ -161,9 +172,9 @@ function crear_volumen(){
 		data.forEach(function(v,i){
 			namespaces.push({name:v.name,value:v.id})
 		})
-		printSelect('#plus_play',"Namespace",'namespace',namespaces,'')
-		printInput('#plus_play',"Nombre del Volumen",'name','')
-		printSelect('#plus_play',"Tipo",'type',options,'')
+		printSelect('#plus_play',"Namespace",'namespace',namespaces,'',null)
+		printInput('#plus_play',"Nombre del Volumen",'name','',null)
+		printSelect('#plus_play',"Tipo",'type',options,null)
 		printInput('#plus_play',"Capasidad(GB)",'size','')
 		$(".alta_button").on('click',function(){
 			data = {name:$("#name").val(),
