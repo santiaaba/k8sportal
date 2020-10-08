@@ -50,48 +50,6 @@ function menu_click(f,g,h){
 	})
 }
 
-/*
-function make_menu(){
-	$("#menu1")
-	.append("<div id='m-namespace'><img src='img/capas.png'><span>dockers</span></div>")
-	.append("<div id='m-namespace'><img src='img/capas.png'></div>")
-	.append("<div id='m-deploy'><img src='img/ship.png'></div>")
-	.append("<div id='m-volume'><img src='img/storage.png'></div>")
-	.append("<div id='m-secret'><img src='img/key.png'></div>")
-	.append("<div id='m-service'><img src='img/service.png'></div>")
-	.append("<div id='m-networkPolicy'><img src='img/netPol.png'></div>")
-
-	$("#m-namespace").on('click', function(){
-		menu_click(namespace_list,namespace_sections,['id'])
-	})
-
-	$("#m-deploy").on('click', function(){
-		menu_click(deploy_list,deploy_sections,['idNamespace','name'])
-	})
-
-	$("#m-volume").on('click', function(){
-		menu_click(volume_list,volume_sections,['idNamespace','name'])
-	})
-
-	$("#m-networkPolicy").on('click', function(){
-		alert("Implementar")
-	})
-
-	$("#m-secret").on('click', function(){
-		menu_click(secret_list,secret_sections,['idNamespace','name'])
-	})
-
-	$("#m-service").on('click', function(){
-		menu_click(service_list,service_sections,['idNamespace','name'])
-	})
-
-	/* Para el menu plus
-	$("#menuplus")
-	.append("<div id='m-plus'>+</div>")
-	plus_init('#m-plus')
-}
-*/
-
 function main(){
 	$.ajaxSetup({ cache: false });
 
@@ -109,38 +67,91 @@ function main(){
 	})
 
 	main_menu_make('main_menu_w',
-		[{type:'submenu',name:'Maquina virtual',img:'img/vm.png',submenu:[],addButton: null},
-		{type:'submenu',name:'Hosting Web',img:'img/hostingweb.png',submenu:[],addButton:null},
-		{type:'submenu',name:'Almacenamiento',img:'img/s3.png',submenu:[],addButton:null},
+		[{type:'submenu',name:'Maquina virtual',img:'img/vm.png',submenu:[],addData: null},
+		{type:'submenu',name:'Hosting Web',img:'img/hostingweb.png',submenu:[],addData: null},
+		{type:'submenu',name:'Almacenamiento',img:'img/storage.png',submenu:[
+			{ name: 'Object Storage',
+			  img: 'img/sss.png',
+			  click: null
+			},
+			{ name: 'Archiving',
+			  img: 'img/archive.png',
+			  click: null
+			}
+		],addData: null},
 		{type:'submenu',name:'Docker',img:'img/ship.png',submenu:[
 			{ name: 'Namespace',
 			  img: 'img/capas.png',
-			  click: null
+			  click: k8s_namespaces
 			},
 			{ name: 'Deployment',
 			  img: 'img/deployment.png',
-			  click: function(){k8s_deployments('content')}
+			  click: k8s_deployments
 			},
 			{ name: 'Volumes',
 			  img: 'img/volume.png',
-			  click: function(){k8s_volums('content')}
+			  click: k8s_volumes
 			},
-			{ name: 'Security',
+			{ name: 'Keys',
 			  img: 'img/key.png',
 			  click: null
 			},
 			{ name: 'Services',
-			  img: 'img/services.png',
-			  click: function(){k8s_services('content')}
+			  img: 'img/service.png',
+			  click: k8s_services
 			}
-			],addButton: k8s_make_agregar},
-		{type:'submenu',name:'Base de datos',img:'img/database.png',submenu:[],addButton:null},
-		{type:'submenu',name:'IoT',img:'img/iot.png',submenu:[],addButton:null},
-		{type:'submenu',name:'Block Chain',img:'img/blockchain.png',submenu:[],addButton:null}])
+			],addData: [
+				{name:"Namespace",img:"img/namespace.png",detalle:
+				'<p>Un Namespace le permite organizar sus proyectos.</p>' +
+                '<p>Los Namespace agrupan recursos como vol&uacute;menes de discos, ' +
+                'despliegues de aplicaciones.</p><p>Las aplicaciones de una namespace ' +
+                'pueden verse entre si pero no de con aplicaciones de otros namespace.' +
+                'Al menos no si no se lo permite explicitamente</p>'
+				,f:null},
+				{name:"Deployment",img:"img/deployment.png",detalle:"<Genera un nuevo despliegue>",
+					f:k8s_deployment_despliegue},
+				{name:"Volumen",img:"img/volume.png",detalle:"Aca va texto explicativo",f:k8s_volume_despliegue},
+				{name:"Servicio",img:"img/service.png",detalle:"Aca va texto explicativo",f:k8s_service_despliegue},
+				{name:"Key",img:"img/key.png",detalle:"Aca va texto explicativo",f:null}
+			]},
+		{type:'submenu',name:'Base de datos',img:'img/database.png',submenu:[
+			{ name: 'MS SQL',
+			  img: 'img/db_mssql.png',
+			  click: null
+			},
+			{ name: 'Postgress',
+			  img: 'img/db_postgress.png',
+			  click: null
+			},
+			{ name: 'MariaDB',
+			  img: 'img/db_mysql.png',
+			  click: null
+			},
+			{ name: 'MongoDB',
+			  img: 'img/db_mongodb.png',
+			  click: null
+			},
+			{ name: 'Time Scale DB',
+			  img: 'img/db_timescaledb.png',
+			  click: null
+			},
+			{ name: 'RedisDB',
+			  img: 'img/db_redis.png',
+			  click: null
+			}
+		],addData: null},
+		{type:'submenu',name:'IoT',img:'img/iot.png',submenu:[],addData: null},
+		{type:'submenu',name:'Block Chain',img:'img/blockchain.png',submenu:[],addData: null}])
 
 	$(".contenido").empty()
 
 	menu_agregar = new MenuAgregar
+	popup = new PopUp
+
+	$(document).keyup(function(event){
+		if(event.keyCode == 27)
+			menu_agregar.contraer(null)
+	})
 
     $(window).on('resize',function(){resize_ajuste()})
 	resize_ajuste()
@@ -275,6 +286,7 @@ function resize_ajuste(){
  	   el tamano del navegador */
 	$(".wrp1").height($(window).height() - 50)
 	$("#content").height($(window).height() - 50)
+	$("#main_submenu").height($(window).height() - 50)
 }
 
 function vertical_list_show(padre,data,column,onclick,params){

@@ -1,16 +1,59 @@
-/* ------------------- Deployments -----------------------*/
-
-function k8s_make_agregar(button){
-	/* Arma el menu y sus respectivos formularios de agregar
-	 * componentes de kubernetes. El parametro button
-	 * es la referencia al boton que lo despliega */
-	alert('hola mundo agregar')
+/* ------------------- Namespace -----------------------*/
+function k8s_namespaces(){
+	$("#content").empty()
+	var id = azar()
+	var s5 = printSection('content','data','col','uno',{id:id,title:'titulo',flex:'col',children:[]})
+	k8s_namespace_list(id)
 }
 
-function k8s_deployments(parent){
-	$("#" + parent).empty()
+function k8s_namespace_list(parent){
+	var namespaces = new Array
+	ajax_GET('/v1/app/namespace')
+	.then(data=>{
+		data.forEach(e => {
+			namespaces.push(e)
+		})
+		armarListado(parent,[{nombre:'Nombre',dato:'name',tipo:'string',width:200}],
+							 data,k8s_namespace,['id'],'name',true)
+	})
+	.catch(err=>{
+		alert(JSON.stringify(err))
+	})
+}
+
+function k8s_namespace_status(){
+}
+
+function k8s_namespace(params){
+	/* params es una estructura con dos valores: idNamespace y name */
+	$("#content").empty()
+	.append("<div id='content_menu' class='content_menu'>" +
+			"</div><div id='content_data' class='content_data'></div>" +
+			"</div><div id='content_action' class='content_action'></div>")
+	make_menu('content_menu',function(){k8s_namespaces()},params.name,[
+		{title:'Estado',f:function(){k8s_namespace_status('content_data',params)},default:'yes'},
+		{title:'Estadisticas',f:null}
+	])
+	actionBar = new ActionBar('content_action')
+	actionBar.add('Eliminar','img/delete.png',2,
+		function(){ popup.up('confirm','Seguro que desea eliminar','250px','200px',k8s_namespace_delete,params)})
+	actionBar.render()
+}
+
+function k8s_namespace_apply(){
+}
+
+function k8s_namespace_delete(){
+}
+
+
+
+/* ------------------- Deployments -----------------------*/
+
+function k8s_deployments(){
+	$("#content").empty()
 	var id = azar()
-	var s5 = printSection(parent,'data','col','uno',{id:id,flex:'col',children:[]})
+	var s5 = printSection('content','data','col','uno',{id:id,title:'titulo',flex:'col',children:[]})
 	k8s_deployment_list(id)
 }
 
@@ -64,14 +107,15 @@ function k8s_deployment(params){
 	.append("<div id='content_menu' class='content_menu'>" +
 			"</div><div id='content_data' class='content_data'></div>" +
 			"</div><div id='content_action' class='content_action'></div>")
-	make_menu('content_menu',function(){k8s_deployments('content')},params.name,[
+	make_menu('content_menu',function(){k8s_deployments()},params.name,[
 		{title:'Estado',f:function(){k8s_deployment_status('content_data',params)},default:'yes'},
 		{title:'Despliegue',f:function(){k8s_deployment_despliegue('content_data',params)}},
 		{title:'Pods',f:function(){k8s_deployment_pods('content_data',params)}},
 		{title:'Estadisticas',f:null}
 	])
 	actionBar = new ActionBar('content_action')
-	actionBar.add('Eliminar','img/delete.png',2,function(){alert("Eliminar")})
+	actionBar.add('Eliminar','img/delete.png',2,
+		function(){ popup.up('confirm','Seguro que desea eliminar','250px','200px',k8s_deployment_delete,params)})
 	actionBar.render()
 }
 
@@ -154,58 +198,50 @@ function k8s_deployment_despliegue(parent,params){
    /* Se utiliza tanto para las antas como para las
  *	  * modificaciones de los despliegues */
 	$("#" + parent).empty()
+	var pod_conf_section = azar()
+	var pod_vol_section = azar()
+	var pod_containers_section = azar()
 	var s1 = printSection(parent,'skeletor','col','uno')
-	var d1 = printSection(s1,'data','col','uno',{id:'pod_conf',flex:'col',children:[]})
-	var d1 = printSection(s1,'data','col','uno',{id:'pod_vol',flex:'col',children:[]})
-	var d1 = printSection(s1,'data','col','uno',{id:'pod_containers',flex:'col',children:[]})
+	printSection(s1,'data','col','uno',{id:pod_conf_section,title:'Deployment',flex:'col',children:[]})
+	printSection(s1,'data','col','uno',{id:pod_vol_section,title:'Volumenes',flex:'col',children:[]})
+	printSection(s1,'data','col','uno',{id:pod_containers_section,title:'Contenedores',flex:'col',children:[]})
 
-/*
-	if(params.idNamespace != null){
-		/* Es una modificacion 
-		var a += "<div id='actions' class='actions'></div>"
-		$(parent).append(a)
-	} else {
-		/* Es un alta 
-		var a += "<div style='text-align: center;'>" +
-			 "<button id='nuevoDeploy' class='alta_button'>Agregar</button></div>"
-		$(parent).append(a)
-		$("#nuevoDeploy").on('click',function(){
-			alert("Agregamos un deploy")
-		})
-	}
-*/
-	var promise
-	if(params.idNamespace != null){
+	if(typeof(params) != 'undefined'){
 		/* Es una modificacion */
-	//	alert("Modificacion")
-		/*
-		actions_make('#actions',[
-				{name:'Apli',action:deploy_apply},
-				{name:'Elim',action:deploy_delete}])
-		*/
 		promise = ajax_GET('/v1/app/namespace/' + params.idNamespace + '/deployment/' + params.name )
 	} else {
 		/* Es un alta */
-	//	alert("Alta")
-		/* Debemos cargar con null algunos datos */
-		/*
-		data = {resources:{cpu:'1',mem:'10Mi'},replicas:'1',image:''}
-		printInput('#vs1',"Namespace",'namespaceName','')
-		*/
-		promise = new Promise((resolv,reject)=> { resolv(data)})
+		promise = new Promise((resolv,reject)=> { resolv()})
 	}
 	promise.then(data=>{
-	   if(params.idNamespace != null){
+	   if(typeof(params) != 'undefined'){
+			/* Es una modificacion */
+			actionBar.add('Salvar','img/save.png',1,k8s_deployment_apply)
+			actionBar.render()
+/*
 			$("#pod_conf").append("<input type='hidden' id='fibercorpID' value='" + data.fibercorpID + "'>")
 			$("#pod_conf").append("<input type='hidden' id='idNamespace' value='" + params.idNamespace + "'>")
-			printText("pod_conf","Nombre",'deployName',data.deployName)
-			printText("pod_conf","Replicas",'replicas',data.replicas)
+*/
+			printText(pod_conf_section,"Nombre",'deployName',data.deployName)
+			printText(pod_conf_section,"Replicas",'replicas',data.replicas)
 		} else {
-			printInput("pod_conf","Nombre",'deployName','')
-			printInput("pod_conf","Replicas",'replicas','')
+			/* Es un alta */
+			printInput(pod_conf_section,"Nombre",'deployName','')
+			printInput(pod_conf_section,"Replicas",'replicas','')
+			ajax_GET('/v1/app/namespace/')
+			.then(data=>{
+				var options =  new Array
+				data.forEach(function(v){
+					options.push({name:v.name,value:v.id})
+				})
+				printSelect(pod_conf_section,'Namespace','idNamespace',options,null)
+			},err => {
+				alert(JSON.stringify(err))}
+			)
+			var data = {volumes:[],containers:[]}
 		}
 
-		printList("pod_vol",'Volumenes',"volumes",
+		printList(pod_vol_section,'Volumenes',"volumes",
 					[{name:'name',label:'nombre',length:100,type:'input'},
 					{name:'type',label:'tipo',length:100,type:'select',
 					options:[   {value:'pvc',label:"pvc"},
@@ -221,8 +257,8 @@ function k8s_deployment_despliegue(parent,params){
 		var montajes = [{name:'name',label:'Nombre Volumen',length:200,type:'input'},
 						{name:'mountPath',label:'Punto de Montaje',length:200,type:'input'}]
 
-		printList("pod_containers","Contenedores",'containers',
-			[{name:'name',label:'Nombre',length:100,type:'input'},
+		printList(pod_containers_section,"Contenedores",'containers',
+			[{name:'name',label:'Nombre',length:300,type:'input'},
 			{name:'image',label:'Imagen',length:100,type:'input'},
 	/*	  {name:'cpu',label:'Cpu',length:100,type:'input'},
  *				  {name:'mem',label:'Memoria',length:100,type:'input'}, */
@@ -246,9 +282,102 @@ function k8s_deployment_despliegue(parent,params){
 						{value:'TCP',label:'TCP'},
 						{value:'UDP',label:'UDP'}]}
 			]}], data.containers,false)
+
+		if(typeof(params) == 'undefined'){
+			/* Es un alta */
+			printSection(s1,'data','col','uno',{id:'deploy_salvar',flex:'row',children:[]})
+			printButton("deploy_salvar","Agregar",k8s_deployment_apply)
+		}
 	})
-	actionBar.add('Salvar','img/save.png',1,function(){alert("salvar " + params.idNamespace + " - " + params.name)})
-	actionBar.render()
+}
+
+function k8s_deployment_apply(){
+	alert("Salvando o actualizando")
+	/* llama a la API para aplicar el deploy */
+
+	/* Armamos el Json */
+	data = {
+		fibercorpID: $("#fibercorpID").val(),
+		deployName: $("#deployName").val(),
+		replicas: $("#replicas").val(),
+		containers:[],
+		volumes:[]
+	}
+	/* Los containers */
+	$("[containers]").each(function(){
+		var id = $(this).attr('id')	 /* ID que poseen todos los elementos del container */
+		var container = {   name:$("#name_" + id).val(),
+							image:$("#image_" + id).val(),
+						/*	cpu:$("#cpu_" + id).val(),
+							mem:$("#mem_" + id).val(),*/
+							args:[],
+							envs:[],
+							discs:[],
+							services:[]}
+
+		/* Los argumentos */
+		$(this).find("[args]").each(function(){
+			$(this).find(":input").each(function(){
+				if($(this).attr('name'))
+					container.args.push($(this).val())
+			})
+		})
+		/* Los environment */
+		$(this).find("[envs]").each(function(){
+			var linea='{'
+			$(this).find(":input").each(function(){
+				if($(this).attr('name'))
+					linea += '"' + $(this).attr('name') + '":"' + $(this).val() + '",'
+			})
+			linea = linea.slice(0, -1) + '}'
+			container.envs.push(JSON.parse(linea))
+		})
+
+		/* los volumenes */
+		$(this).find("[mounts]").each(function(){
+			var linea='{'
+			$(this).find(":input").each(function(){
+				if($(this).attr('name'))
+					linea += '"' + $(this).attr('name') + '":"' + $(this).val() + '",'
+			})
+			linea = linea.slice(0, -1) + '}'
+			container.discs.push(JSON.parse(linea))
+		})
+
+		/* Los Puertos */
+		$(this).find("[ports]").each(function(){
+			var linea='{'
+			$(this).find(":input").each(function(){
+				if($(this).attr('name'))
+					linea += '"' + $(this).attr('name') + '":"' + $(this).val() + '",'
+			})
+			linea = linea.slice(0, -1) + '}'
+			container.ports.push(JSON.parse(linea))
+		})
+		data.containers.push(container)
+	})
+	/* Los volume */
+	$("[volumes]").each(function(){
+		var linea='{'
+		$(this).find(":input").each(function(){
+			if($(this).attr('name'))
+				linea += '"' + $(this).attr('name') + '":"' + $(this).val() + '",'
+		})
+		linea = linea.slice(0, -1) + '}'
+		data.volumes.push(JSON.parse(linea))
+	})
+
+
+	alert(JSON.stringify(data))
+	$(".solapa_body").append(JSON.stringify(data))
+	
+	ajax_POST('/v1/app/namespace/' + $("#idNamespace").val() + '/deployment/',data)
+	.then(ok =>{
+		alert(JSON.stringify(ok))
+	})
+	.catch(err =>{
+		alert(JSON.stringify(err))
+	})
 }
 
 function k8s_deployment_pods(parent,params){
@@ -257,12 +386,12 @@ function k8s_deployment_pods(parent,params){
  	 * espesifica de ese pod */
 	$("#" + parent).empty()
 	var s0 = printSection(parent,'skeletor','row','uno')
-	var d0 = printSection(s0,'data','','uno',{id:'pod_list',flex:'col',children:[]})
+	var d0 = printSection(s0,'data','','uno',{id:'pod_list',title:'titulo',flex:'col',children:[]})
 	var s1 = printSection(s0,'skeletor','col','dos')
-	var d1 = printSection(s1,'data','','uno',{id:'pod_info',flex:'col',children:[]})
-	var d2 = printSection(s1,'data','','uno',{id:'pod_conditions',flex:'col',children:[]})
-	var d3 = printSection(s1,'data','','uno',{id:'pod_containers',flex:'col',children:[]})
-	var d4 = printSection(s1,'data','','uno',{id:'pod_events',flex:'col',children:[]})
+	var d1 = printSection(s1,'data','','uno',{id:'pod_info',title:'titulo',flex:'col',children:[]})
+	var d2 = printSection(s1,'data','','uno',{id:'pod_conditions',title:'titulo',flex:'col',children:[]})
+	var d3 = printSection(s1,'data','','uno',{id:'pod_containers',title:'titulo',flex:'col',children:[]})
+	var d4 = printSection(s1,'data','','uno',{id:'pod_events',title:'titulo',flex:'col',children:[]})
 
 
 	ajax_GET('/v1/app/namespace/' + params.idNamespace + '/deployment/' + params.name + '/pods')
@@ -284,10 +413,10 @@ function k8s_deployment_status(parent,params){
 	var s2 = printSection(s1,'skeletor','row','uno',null)
 
 	var id1 = azar()
-	printSection(s2,'data','col','uno', {id:'deploy_detalle',flex:'col',children:[]})
-	printSection(s2,'data','col','uno', {id:'deploy_estrategia',flex:'col',children:[]})
-	printSection(s1,'data','col','uno',{id:'deploy_replicas',flex:'col',children:[]})
-	printSection(s1,'data','col','uno',{id:'deploy_conditions',flex:'col',children:[]})
+	printSection(s2,'data','col','uno', {id:'deploy_detalle',title:'titulo',flex:'col',children:[]})
+	printSection(s2,'data','col','uno', {id:'deploy_estrategia',title:'titulo',flex:'col',children:[]})
+	printSection(s1,'data','col','uno',{id:'deploy_replicas',title:'titulo',flex:'col',children:[]})
+	printSection(s1,'data','col','uno',{id:'deploy_conditions',title:'titulo',flex:'col',children:[]})
 
 	//alert("los: " + params.name + " - " + params.idNamespace)
 	ajax_GET('/v1/app/namespace/' + params.idNamespace + '/deployment/' + params.name + '/status')
@@ -341,17 +470,32 @@ function k8s_deployment_status(parent,params){
 	})
 }
 
+
+function k8s_deployment_delete(params){
+	/* Envia a eliminar un deploy 
+	params: {idnamespace: ide del namespace, name: nombre del deploy}
+	*/
+	ajax_DELETE("/v1/app/namespace/" + params.idNamespace + "/deployment/" + params.name)
+	.then(ok => {
+		k8s_deployments()
+	})
+	.catch(err => {
+		alert("Error al Eliminar:" + JSON.stringify(err))
+	})
+	
+}
+
 /* ------------------- Volumenes -----------------------*/
 
-function k8s_volums(parent){
-	$("#" + parent).empty()
+function k8s_volumes(){
+	$("#content").empty()
 	var id = azar()
-	var s5 = printSection(parent,'data','col','uno',{id:id,flex:'col',children:[]})
-	k8s_volums_list(id)
+	var s5 = printSection('content','data','col','uno',{id:id,title:'titulo',flex:'col',children:[]})
+	k8s_volumes_list(id)
 }
 
 
-function k8s_volums_list(parent){
+function k8s_volumes_list(parent){
 	var a= new Promise((resolv,reject)=>{
 		var pvcs = new Array
 		ajax_GET('/v1/app/namespace')
@@ -397,16 +541,35 @@ function k8s_volums_list(parent){
 function k8s_volume(params){
 	$("#content").empty()
 	.append("<div id='content_menu' class='content_menu'>" +
-			"</div><div id='content_data' class='content_data'></div>")
-	make_menu('content_menu',function(){k8s_volums('content')},params.name,[
+			"</div><div id='content_data' class='content_data'></div>" +
+			"</div><div id='content_action' class='content_action'></div>")
+	make_menu('content_menu',function(){k8s_volumes()},params.name,[
 		{title:'Estado',f:function(){k8s_volum_status('content_data',params)},default:'yes'},
 		{title:'Estadisticas',f:null}
 	])
+	actionBar = new ActionBar('content_action')
+	actionBar.add('Eliminar','img/delete.png',2,
+		function(){ popup.up('confirm','Seguro que desea eliminar','250px','200px',k8s_volume_delete,params)})
+	actionBar.render()
+}
+
+function k8s_volume_delete(params){
+	/* Envia a eliminar un deploy 
+	params: {idnamespace: ide del namespace, name: nombre del volumen}
+	*/
+	ajax_DELETE("/v1/app/namespace/" + params.idNamespace + "/volume/" + params.name)
+	.then(ok => {
+		k8s_volumes()
+	})
+	.catch(err => {
+		alert("Error al Eliminar:" + JSON.stringify(err))
+	})
+	
 }
 
 function k8s_volum_status(parent,params){
 	$("#" + parent).empty()
-	var s1 = printSection(parent,'data','col','uno',{id:'volum_detalle',flex:'col',children:[]})
+	var s1 = printSection(parent,'data','col','uno',{id:'volum_detalle',title:'titulo',flex:'col',children:[]})
 
 	ajax_GET('/v1/app/namespace/' + params.idNamespace + '/volume/' + params.name)
 	.then((data)=> {
@@ -421,12 +584,80 @@ function k8s_volum_status(parent,params){
 	})
 }
 
+function k8s_volume_despliegue(parent,params){
+
+	$("#" + parent).empty()
+	var volume_conf = azar()
+	var s1 = printSection(parent,'skeletor','col','uno')
+	printSection(s1,'data','col','uno',{id:volume_conf,title:'titulo',flex:'col',children:[]})
+
+	var promise
+	if(typeof(params) != 'undefined'){
+		alert("Es una modificacion")
+		/* Es una modificacion */
+		promise = ajax_GET('/v1/app/namespace/' + params.idNamespace + '/volume/' + params.name )
+	} else {
+		alert("Es un alta")
+		/* Es un alta. No hay volumen que buscar */
+		promise = new Promise((resolv,reject)=>{ resolv(null) })
+	}
+	promise.then(data=>{
+		if(typeof(params) != 'undefined'){
+			/* Si es una modificacion  aun no esta implementado */
+		} else {
+			/* Si es un alta */
+			var promise_n = ajax_GET('/v1/app/namespace')
+			promise_n.then(data=>{
+				var options =  new Array
+				data.forEach(function(v){
+					options.push({name:v.name,value:v.id})
+				})
+				printSelect(volume_conf,'Namespace','namespace',options,null)
+				printInput(volume_conf,'Nombre del Volumen','name','',null)
+				printSelect(volume_conf,'Despliegue','type',[{name:'Ceph',value:'csi-rbd-sc'}],null)
+				printInput(volume_conf,'Capacidad(GB)','size','',null)
+			},err=>{
+				alert("Error al querer obtener los namespaces")
+			})
+			printSection(s1,'data','col','uno',{id:'volume_salvar',title:'titulo',flex:'row',children:[]})
+			printButton("volume_salvar","Agregar",function(){
+				k8s_volume_apply(function(){
+					alert("cerramos alta")
+					menu_agregar.contraer(k8s_volumes)
+				},function(){
+					alert("informamos error")
+				})
+			})
+		}
+	},err=>{
+		alert("Error al generar el formulario")
+		alert(JSON.stringify(err))
+	})
+}
+
+function k8s_volume_apply(ok,bad){
+	alert("Apply")
+	data = {name:$("#name").val(),
+			size:$("#size").val(),
+			class:$("#type").val()}
+	alert(JSON.stringify(data))
+	ajax_POST('/v1/app/namespace/' + $("#namespace").val() + '/volume/',data)
+	.then(data => {
+		alert("Volumen dado de alta")
+		ok()
+	},err => {
+		alert("ERROr alta volumen" + JSON.stringify(err))
+		bad()
+	})
+}
+
+
 /* ------------------- Services -----------------------*/
 
-function k8s_services(parent){
-	$("#" + parent).empty()
+function k8s_services(){
+	$("#content").empty()
 	var id = azar()
-	var s5 = printSection(parent,'data','col','uno',{id:id,flex:'col',children:[]})
+	var s5 = printSection('content','data','col','uno',{id:id,title:'titulo',flex:'col',children:[]})
 	k8s_services_list(id)
 }
 
@@ -475,16 +706,20 @@ function k8s_services_list(parent){
 function k8s_service(params){
 	$("#content").empty()
 	.append("<div id='content_menu' class='content_menu'>" +
-			"</div><div id='content_data' class='content_data'></div>")
-	make_menu('content_menu',function(){k8s_services('content')},params.name,[
+			"</div><div id='content_data' class='content_data'></div>" +
+			"</div><div id='content_action' class='content_action'></div>")
+	make_menu('content_menu',function(){k8s_services()},params.name,[
 		{title:'Estado',f:function(){k8s_service_status('content_data',params)},default:'yes'},
 		{title:'Despliegue',f:function(){k8s_service_despliegue('content_data',params)}},
 		{title:'Estadisticas',f:null}
 	])
+	actionBar = new ActionBar('content_action')
+	actionBar.add('Eliminar','img/delete.png',2,
+		function(){ popup.up('confirm','Seguro que desea eliminar','250px','200px',k8s_service_delete,params)})
+	actionBar.render()
 }
 
 function k8s_service_status(parent,params){
-	alert("Implementar")
 }
 
 function k8s_service_despliegue(parent,params){
@@ -504,55 +739,32 @@ function k8s_service_despliegue(parent,params){
 	}
 
 	$("#" + parent).empty()
+	var service_conf = azar()
 	var s1 = printSection(parent,'skeletor','col','uno')
-	printSection(s1,'data','col','uno',{id:'vs1',flex:'col',children:[]})
-	printSection(s1,'data','col','uno',{id:'vs2',flex:'col',children:[]})
-
-	$(parent).empty()
-	var a = "<div id='section' class='flex col uno overflow-y'>" +
-			"<div id='vs1' class='flex col padding_not_r'></div>" +
-			"<div id='vs2' class='flex col padding_not_r'></div></div>"
-/*
-	if(idNamespace != null){
-		/* Es una modificacion 
-		a += "<div id='actions' class='actions'></div>"
-		$(parent).append(a)
-	} else {
-		/* Es un alta
-		a += "<div style='text-align: center;'>" +
-			 "<button id='nuevoService' class='alta_button'>Agregar</button></div>"
-		$(parent).append(a)
-		$("#nuevoService").on('click',function(){
-			alert("Agregamos un Servicio")
-			service_apply()
-		})
-	}
-*/
+	printSection(s1,'data','col','uno',{id:service_conf,title:'titulo',flex:'col',children:[]})
 
 	var promise
-	var alta
-	if(params.idNamespace != null){
-		alta = false
-		alert("Es una modificacion")
+	if(typeof(params) != 'undefined'){
 		/* Es una modificacion */
-		actions_make('#actions',[
-			{name:'Apli',action:service_apply},
-			{name:'Elim',action:service_delete}])
 		promise = ajax_GET('/v1/app/namespace/' + params.idNamespace + '/service/' + params.name )
 	} else {
-		alert("Es un alta")
-		alta = true
 		/* Es un alta. No hay servicio que buscar */
 		promise = new Promise((resolv,reject)=>{ resolv(null) })
 	}
 	promise.then(data=>{
-		if(!alta){
-			/* Si es una edicion */
-			printText('vs1',"Nombre del servicio",'serviceName',data.name)
-			printText('vs1',"Namespace",'idNamespace',data.namespace)
-			$("#vs1").append("<input type='hidden' id='idNamespace' value='" + params.idNamespace + "'>")
-			$("#vs1").append("<input type='hidden' id='deployName' value='" +
-							 data.target + "'>")
+		if(typeof(params) != 'undefined'){
+			/* Si es una modificacion */
+			printText(service_conf,"Nombre del servicio",'serviceName',data.name)
+			printText(service_conf,'Namespace','namespace',data.namespace)
+			printHidden(service_conf,'deployName',data.target)
+			printHidden(service_conf,'idNamespace',params.idNamespace)
+
+			actionBar.add('Salvar','img/save.png',1,function(){
+				k8s_service_apply(null,function(){
+					alert("Informamos del error")
+				})
+			})
+			actionBar.render()
 		} else {
 			/* Si es un alta */
 			var promise_n = ajax_GET('/v1/app/namespace')
@@ -561,9 +773,9 @@ function k8s_service_despliegue(parent,params){
 				ok.forEach(function(v,i){
 					options.push({name:v.name,value:v.id})
 				})
-				printInput('vs1',"Nombre del servicio",'serviceName','')
-				printSelect('vs1',"Namespace",'idNamespace',options,change_deployments)
-				printSelect('vs1',"Despliegue",'deployName',[],null)
+				printInput(service_conf,"Nombre del servicio",'serviceName','')
+				printSelect(service_conf,"Namespace",'idNamespace',options,change_deployments)
+				printSelect(service_conf,"Despliegue",'deployName',[],null)
 			},err=>{
 				alert("Error al querer obtener los namespaces")
 			})
@@ -573,27 +785,91 @@ function k8s_service_despliegue(parent,params){
 			{name:'Interno',value:'in'},
 			{name:'Externo',value:'out'}]
 
-		printList("vs2",'Servicios',"service",[
+		printList(service_conf,'Servicios',"service",[
 			{name:'type',label:'tipo',length:100,type:'select',
 				options:[   {value:"in",label:"interna"},
 							{value:"out",label:"externa"},
 							{value:"url",label:"URL"}]},
 			{name:'ip',label:'ip',length:60,type:'input',selectName:'type',option:'out'},
-			{name:'ports',label:'ports',length:60,type:'list',selectName:'type',option:'in',
-				data:[  {name:'name',label:'nombre',length:60,type:'input'},
-						{name:'protocol',label:'protocol',length:60, type:'select',options:[
+			{name:'ports',label:'ports',length:100,type:'list',selectName:'type',option:'in',
+				data:[  {name:'name',label:'nombre',length:200,type:'input'},
+						{name:'protocol',label:'protocol',length:100, type:'select',options:[
 							{label:"tcp",value:"TCP"},
 							{label:"udp",value:"UDP"}]},
 						{name:'port',label:'puerto',length:100,type:'input'}]},
 			{name:'urls',label:'url',length:150,type:'list',selectName:'type',option:'url',
-				data:[  {name:'url',label:'',length:200,type:'input'},
-						{name:'path',label:'',length:200,type:'input'},
-						{name:'port',label:'',length:200,type:'select',
+				data:[  {name:'url',label:'url',length:200,type:'input'},
+						{name:'path',label:'path',length:200,type:'input'},
+						{name:'port',label:'puerto',length:100,type:'select',
 							 options:[   {value:"80", label:"http"},
 										 {value:"443", label:"https"} ]} ]
 			}], data,true)
+
+		if(typeof(params) == 'undefined'){
+			/* Es un alta */
+			printSection(s1,'data','col','uno',{id:'service_salvar',flex:'row',children:[]})
+			printButton("service_salvar","Agregar",function(){
+				k8s_service_apply(function(){
+					menu_agregar.contraer(k8s_services)
+				},function(){
+					alert("Informamos del error")
+				})
+			})
+		}
 	},err=>{
 		alert("Error al generar el formulario")
 		alert(JSON.stringify(err))
 	})
 }
+
+function k8s_service_apply(ok,bad){
+	/* Armamos el json */
+	data = {name: $("#serviceName").val(),
+			target: $("#deployName").val()}
+	$("[service]").each(function(){
+		var id = $(this).attr('id')
+		data.type = $("#type_" + id).val()
+
+		if(data.type == 'url'){
+			var a='urls'
+			data.urls = []
+		} else {
+			var a='ports'
+			data.ports = []
+		}
+		$(this).find("[" + a + "]").each(function(){
+			var linea='{'
+			$(this).find(":input").each(function(){
+				if($(this).attr('name'))
+					linea += '"' + $(this).attr('name') + '":"' + $(this).val() + '",'
+			})
+			linea = linea.slice(0, -1) + '}'
+			if(data.type == 'url') 
+				data.urls.push(JSON.parse(linea))
+			else
+				data.ports.push(JSON.parse(linea))
+		})
+	})
+	ajax_POST('/v1/app/namespace/' + $("#idNamespace").val() + '/service/',data)
+	.then(data =>{
+		ok()
+	},err =>{
+		bad()
+	})
+}
+
+function k8s_service_delete(params){
+	/* Envia a eliminar un servicio
+	params: {idnamespace: ide del namespace, name: nombre del deploy}
+	*/
+	ajax_DELETE("/v1/app/namespace/" + params.idNamespace + "/service/" + params.name)
+	.then(ok => {
+		k8s_services()
+	})
+	.catch(err => {
+		alert("Error al Eliminar:" + JSON.stringify(err))
+	})
+	
+}
+
+

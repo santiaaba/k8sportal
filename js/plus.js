@@ -180,7 +180,6 @@ function crear_volumen(){
 			data = {name:$("#name").val(),
 					size:$("#size").val(),
 					class:$("#type").val()}
-			//alert(JSON.stringify(data))
 			ajax_POST('/v1/app/namespace/' + $("#namespace").val() + '/volume/',data)
 			.then(ok => {
 				alert("Volumen dado de alta")

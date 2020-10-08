@@ -1,17 +1,49 @@
 div.menu_agregar{
 	position:absolute;
-	background-color: blue;
+	display:flex;
+	flex-direction:row;
+	background-color: #0b0821;
 	bottom: 0px;
 	left: 0px
 	width:0px;
 	height:0px;
 	overflow-y:auto;
+	color: #eee;
+	font-size:16px;
+}
+
+div.menu_agregar_items{
+	display:flex;
+	flex: initial;
+	width:250px;
+	flex-direction:column;
+	background-color:#0b0821;
+}
+
+div.menu_agregar_item{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: left;
+	padding: 10px;
+	margin-top: 5px;
+}
+
+div.menu_agregar_item img {
+	width: 50px;
+	margin-right: 20px;
 }
 
 div.menu_agregar_detalle {
-	background-color: red;
+	background-color: #1e165b;
+	flex: 1 1;
+	padding:40px;
 }
 
-div.menu_agregar_formulario{
-	background-color: yellow;
+div.menu_agregar_formulario {
+	flex: initial;
+	width:0px;
+	padding:0px;
+	background-color: #2a1d8a;
+	overflow-y:auto;
 }

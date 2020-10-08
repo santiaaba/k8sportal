@@ -7,6 +7,7 @@ function printSection(parent,type,direction,flex,structure){
 	   flex:		 La relacion. uno, dos, tres en css
 	   structure:	 En formato Json, detalla como es la estructura dentro de la
 					 seccion cuando type es data. Cada elemento posee tres campos:
+						title: titulo a mostrar
 					    flex: indica la direccion Flex css
 					    children: indica los elementos dentro del Flex
 					    id: Un id unico en todo el sitio
@@ -27,9 +28,15 @@ function printSection(parent,type,direction,flex,structure){
 	} else {
 		$('#' + parent)
 		.append("<div id='" + id + "' class='section_data " + direction + " " + flex + "'></div>")
+		if(typeof(structure.title) != 'undefined')
+			$("#" + id).append("<div>" + structure.title + "</div>")
 		printStruct(id,structure)
 	}
 	return id
+}
+
+function printHidden(parent,name,value){
+	$("#"+parent).append("<input type='hidden' id='" + name + "' value='" + value + "'>")
 }
 
 function printTitle(parent,name){
@@ -154,8 +161,8 @@ function printList(parent,name,grupo,campos,datos,unico){
 		var idlinea = azar()
 		var parte = "parte_" + azar()
 		$("#listado_" + id)
-		.append("<div id='" + idlinea + "' " + grupo + " class='flex-col'>" + 
-				"<div id='" + parte + "' class='flex-row'></div></div>")
+		.append("<div id='" + idlinea + "' " + grupo + " class='flex-col AF-item'>" + 
+				"<div id='" + parte + "' class='flex-row' style='align-items: center'></div></div>")
 		$.each(campos,function(i,v){
 			var idcampo = azar()
 			if(typeof(v.option) == 'undefined'){
@@ -209,7 +216,7 @@ function printList(parent,name,grupo,campos,datos,unico){
 						var partelist = "parte_" + azar()
 						$("#" + idlinea)
 						.append("<div id='" + partelist + 
-								"' class='flex-row tab padding'></div></div>")
+								"' class='flex-row tab' style='padding: 10px 0px 10px 10px' ></div></div>")
 						if(datos != null){
 							//alert("Hay datos")
 							printList(partelist,v.label,v.name,v.data,datos[v.name],false)
@@ -220,7 +227,14 @@ function printList(parent,name,grupo,campos,datos,unico){
 			}
 		})
 		if(!unico){
-			$("#" + parte).append("<button id='delete_" + idlinea + "'>-</button>")
+			$("#" + parte).append("<img class='AF-remove' id='delete_" + idlinea + "' src='img/remove.png'>")
+			$("#delete_" + idlinea).hover(function(){
+				$("#" + idlinea).css("background-color","#f78585")
+				//$("#" + idlinea).animate({backgroundColor:"#f78585"},400)
+			},function(){
+				//$("#" + idlinea).animate({backgroundColor:"white"},400)
+				$("#" + idlinea).css("background-color","")
+			})
 			$("#delete_" + idlinea).on("click",function(){
 				$("#" + idlinea).remove()
 			})
@@ -229,15 +243,14 @@ function printList(parent,name,grupo,campos,datos,unico){
 
 	//alert(JSON.stringify(datos))
 	var id = azar()
-	var contenido = "<div class='input'>" +
-				"<div class='flex-col'>" +
-					"<div class='flex-row' style='margin-bottom:10px'>" +
+	var contenido = "<div class='input flex-col'>" +
+					"<div class='AF-title'>" +
 						"<div class='uno title v_center'>" + name + "</div>" +
 						"<div class='initial v_center flex'>"
 	if(!unico)
-		contenido += "<button id='button_" + id + "' class='add_button'>+</button>"
+		contenido += "<img class='AF-add' id='button_" + id + "' src='/img/add2.png'>"
 	contenido += "</div></div><div id='listado_" + id + "' class='flex-col'></div>" +
-				 "</div></div>"
+				 "</div>"
 	$("#" + parent).append(contenido)
 	if(!unico){
 		$("#button_" + id).on("click",function(){
@@ -259,6 +272,15 @@ function printList(parent,name,grupo,campos,datos,unico){
 			add_line(grupo,'#listado_' + id,campos,datos)
 		}
 	}
+}
+
+function printButton(parent,label,f){
+	var id = azar();
+	$("#" + parent).append("<button id='" + id + "'>" + label + "</button>")
+	$("#" + id).on("click",function(){
+		f()
+	})
+	return id
 }
 
 function printInput(parent,label,id,data){
@@ -292,6 +314,7 @@ function azar(){
 }
 
 function ajax_GET(path){
+	console.log(apiserver + path)
 	return new Promise((resolv,reject)=>{
 		$.ajax({
 			method: 'GET',
@@ -310,20 +333,41 @@ function ajax_GET(path){
 	})
 }
 
+function ajax_DELETE(path){
+	return new Promise((resolv,reject)=>{
+		$.ajax({
+			method: 'DELETE',
+			cache: false,
+			headers:{ "token":userToken},
+			url: apiserver + path,
+			dataType: 'json',
+			contentType: 'application/json',
+			success: function(){
+				resolv()
+			},
+			error: function(jqXHR,textStatus,errorThrown){
+				reject(jqXHR)
+			}
+		})
+	})
+}
+
 function ajax_POST(path,data){
+	console.log(apiserver + path)
 	return new Promise((resolv,reject)=>{
 		$.ajax({
 			method: 'POST',
 			cache: false,
 			headers:{ "token":userToken},
 			url: apiserver + path,
-			dataType: 'json',
+			//dataType: 'json',
 			contentType: 'application/json',
 			data: JSON.stringify(data),
-			success: function(data){
-				resolv(data)
+			success: function(){
+				resolv()
 			},
-			error: function(jqXHR,textStatus,errorThrown){
+			error: function(jqXHR, textStatus, errorThrown){
+				console.log(textStatus, errorThrown);
 				reject(jqXHR)
 			}
 		})
