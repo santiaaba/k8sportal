@@ -1,0 +1,23 @@
+div.AF-item{
+	padding: 2px;
+	margin-bottom: 10px;
+}
+
+div.AF-title{
+	display: flex;
+	flex-direction: row;
+	border-bottom: solid 1px black;
+	background-color: #1e165b;
+	height:30px;
+	padding: 4px;
+	color: white;
+}
+
+img.AF-remove{
+	margin-left: auto;
+	height:25px;
+}
+img.AF-add{
+	margin-left: auto;
+	width:25px;
+}

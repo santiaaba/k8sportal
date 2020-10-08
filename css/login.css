@@ -1,0 +1,60 @@
+body{
+	background-color: #3a3a3a;
+	overflow: hidden;
+}
+div.cloud{
+	position:absolute;
+	right:0px;
+	bottom:0px;
+}
+
+div.login-recuadro{
+	position: absolute;
+	top:100;
+	left:-380;
+	display: flex;
+	flex-direction: column;
+    color:white;
+    width:340px;
+    height:220px;
+    padding: 30px 10px 6px 10px;
+    background-color: #0b0821
+}
+
+div.login-error{
+    color: #f02424;
+    padding-left:6px;
+    height:22px;
+}
+
+div.login-fila{
+    display: flex;
+    padding:10px;
+}
+
+div.login-label{
+    width:100px;
+}
+
+div.login-campo{
+    width:150px;
+}
+
+div.login-campo input{
+    width:200px;
+    padding: 5px 10px 5px 10px;
+    color: #3a3a3a;
+    font-weight:bold;
+}
+
+div.login-button{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding:20px;
+}
+
+div.login-button button{
+    width:100%;
+    padding:12px 30px 12px 30px;
+}
