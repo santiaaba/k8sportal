@@ -514,3 +514,41 @@ function format_data_counter(data){
 	}
 	return dataf
 }
+
+function chart_donut(parent,data,width,height){
+	/* data es un array donde cada elemento es de la forma
+	 * {nombre:<nombre>,valor:<valor>,color:<color>}
+	 */
+	var valores = new Array;
+	var nombres = new Array;
+	var colores = new Array;
+	data.forEach(function(v){
+		valores.push(v.valor)
+		nombres.push(v.nombre)
+		colores.push(v.color)
+	})
+	
+	var config =  {
+		type: 'doughnut',
+		data: {
+			datasets: [{
+				data: valores,
+				backgroundColor: colores,
+				label: 'Dataset 1'
+			}],
+			labels: nombres
+		},
+		options: {
+			responsive: false,
+			legend: {
+				position: 'bottom'
+			}
+		}
+	}
+
+	var id = azar()
+	$("#" + parent).append("<div width='" + width + "' height='" + height + "'>" +
+						   "<canvas id='" + id + "'></canvas></div>")
+	var ctx = document.getElementById(id).getContext('2d');
+	var donutchar = new Chart(ctx, config);
+}

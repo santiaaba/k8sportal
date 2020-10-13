@@ -52,52 +52,59 @@ function k8s_namespace_delete(){
 
 function k8s_deployments(){
 	$("#content").empty()
-	var id = azar()
-	var s5 = printSection('content','data','col','uno',{id:id,title:'titulo',flex:'col',children:[]})
-	k8s_deployment_list(id)
-}
+	var s1 = printSection('content','skeletor','col','uno')
+	var d1 = printSection(s1,'data','col','uno',{id:'dep_status',title:'Estado',flex:'col',children:[]})
+	var d2 = printSection(s1,'data','col','uno',{id:'dep_recursos',title:'Recursos',flex:'col',children:[]})
+	var d3 = printSection('content','data','col','uno',{id:'dep_listado',title:'Deployments',flex:'col',children:[]})
 
-function k8s_deployment_list(parent){
-	var a = new Promise((resolv,reject)=>{
-		var deployments = new Array
-		ajax_GET('/v1/app/namespace')
-		.then(data=>{
-			data.forEach(e => {
-				$.ajax({
-					method: 'GET',
-					cache: false,
-					headers:{ "token":userToken},
-					url: apiserver + '/v1/app/namespace/' + e.id + '/deployment',
-					dataType: 'json',
-					async: false,
-					contentType: 'application/json',
-					success: function(data){
-						data.items.forEach( s => {
-							var deploy = {
-								idNamespace:e.id,
-								name:s.metadata.name,
-								namespace:s.metadata.namespace}
-							deployments.push(deploy)
-						})
-					},
-					error: function(jqXHR,textStatus,errorThrown){
-						reject(jqXHR)
+	var deployments = new Array
+	var dep_status = [
+		{nombre:'activas', valor: 0, color:'green'},
+		{nombre:'inactivas', valor: 0, color:'red'}]
+	ajax_GET('/v1/app/namespace')
+	.then(data=>{
+		var promesas = new Array
+		data.forEach(e => {
+			promesas.push(ajax_GET('/v1/app/namespace/' + e.id + '/deployment'))
+		})
+		Promise.all(promesas)
+		.then(data => {
+			data.forEach(d => {
+				var idNamespace = d.idNamespace
+				d.items.forEach( s => {
+					var deploy = {
+						idNamespace:idNamespace,
+						name:s.metadata.name,
+						namespace:s.metadata.namespace,
+						activas:0,
+						inactivas:0}
+					deployments.push(deploy)
+					if(typeof(s.status.availableReplicas) != 'undefined'){
+						dep_status[0].valor += s.status.availableReplicas
+						deploy.activas = s.status.availableReplicas
+					}
+					if(typeof(s.status.unavailableReplicas) != 'undefined'){
+						dep_status[1].valor += s.status.unavailableReplicas
+						deploy.inactivas = s.status.unavailableReplicas
 					}
 				})
 			})
-			resolv(deployments)
+
+			/* Status de los deployments */
+			chart_donut('dep_status',dep_status,50,50)
+			/* recursos de los deployments */
+
+			/* Listado de deployments */
+			armarListado('dep_listado',[{nombre:'Nombre',dato:'name',tipo:'string',width:200},
+						 {nombre:'Namespace',dato:'namespace',tipo:'string',width:200},
+						 {nombre:'Pod activos',dato:'activas',tipo:'string',width:200},
+						 {nombre:'Pod inactivos',dato:'inactivas',tipo:'string',width:200}
+						 ],deployments,k8s_deployment,['idNamespace','name'],'name',true)
 		})
-		.catch(err=>{
+		.catch(err => {
+			alert(err)
 			alert(JSON.stringify(err))
 		})
-	})
-	.then(data => {
-		armarListado(parent,[{nombre:'Nombre',dato:'name',tipo:'string',width:200},
-							 {nombre:'Namespace',dato:'namespace',tipo:'string',width:200}
-							 ],data,k8s_deployment,['idNamespace','name'],'name',true)
-	})
-	.catch(err => {
-		alert(JSON.stringify(err))
 	})
 }
 
@@ -414,8 +421,8 @@ function k8s_deployment_status(parent,params){
 
 	var id1 = azar()
 	printSection(s2,'data','col','uno', {id:'deploy_detalle',title:'titulo',flex:'col',children:[]})
-	printSection(s2,'data','col','uno', {id:'deploy_estrategia',title:'titulo',flex:'col',children:[]})
-	printSection(s1,'data','col','uno',{id:'deploy_replicas',title:'titulo',flex:'col',children:[]})
+	printSection(s2,'data','col','uno', {id:'deploy_replicas',title:'titulo',flex:'col',children:[]})
+	printSection(s1,'data','col','uno',{id:'deploy_estadisticas',title:'titulo',flex:'col',children:[]})
 	printSection(s1,'data','col','uno',{id:'deploy_conditions',title:'titulo',flex:'col',children:[]})
 
 	//alert("los: " + params.name + " - " + params.idNamespace)
@@ -430,7 +437,7 @@ function k8s_deployment_status(parent,params){
 
 	// Estrategia
 		if(data.spec.strategy.type == 'RollingUpdate'){
-			printText('deploy_estrategia',"Estrategia",azar(),'RollingUpdate: ' +
+			printText('deploy_detalle',"Estrategia",azar(),'RollingUpdate: ' +
 			data.spec.strategy.rollingUpdate.maxUnavailable +
 				' max. no disponible / ' +
 				data.spec.strategy.rollingUpdate.maxSurge +
@@ -439,16 +446,9 @@ function k8s_deployment_status(parent,params){
 
 	// Estado de las replicas
 		printTitle('deploy_replicas',"Replicas")
-		var c=[ {name:'solicitadas',width:'100px'},
-				{name:'act.',width:'100px'},
-				{name:'disp.',width:'100px'},
-				{name:'no disp.',width:'100px'} ]
-		var a=[[
-			data.status.replicas,
-			data.status.updatedReplicas,
-			data.status.availableReplicas,
-			data.status.unavailableReplicas]]
-		printTableSimple('deploy_replicas',c,a)
+		chart_donut('deploy_replicas',[
+			{nombre:'activas', valor: data.status.availableReplicas, color:'green'},
+			{nombre:'inactivas', valor:data.status.unavailableReplicas, color:'red'}],50,50)
 
 	//Conditions
 		printTitle('deploy_conditions',"Condiciones")
