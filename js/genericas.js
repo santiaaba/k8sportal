@@ -515,6 +515,46 @@ function format_data_counter(data){
 	return dataf
 }
 
+function chart_littleLine(parent,d,width,height){
+	/* data es un array donde cada elemento es de la forma
+	 * {x:<fecha>,y:<valor>}
+	 */
+	var data = new Array
+	var labels = new Array
+	d.forEach(function(v){
+		data.push(v.y)
+		labels.push(v.x)
+	})
+	console.log(data)
+	var valores = new Array;
+	var config =  {
+		type: 'line',
+		data: {
+			datasets: [{
+				data: data
+			}],
+			labels:labels
+		},
+		options: {
+			scales: {
+				xAxes:[
+					{display: false}
+				]
+			},
+			responsive: false,
+			legend: {
+				display: false
+			}
+		}
+	}
+
+	var id = azar()
+	$("#" + parent).append("<div width='" + width + "' height='" + height + "'>" +
+						   "<canvas id='" + id + "'></canvas></div>")
+	var ctx = document.getElementById(id).getContext('2d');
+	var litlelinechar = new Chart(ctx, config);
+}
+
 function chart_donut(parent,data,width,height){
 	/* data es un array donde cada elemento es de la forma
 	 * {nombre:<nombre>,valor:<valor>,color:<color>}

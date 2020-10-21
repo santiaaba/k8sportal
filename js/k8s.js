@@ -1,9 +1,82 @@
 /* ------------------- Namespace -----------------------*/
 function k8s_namespaces(){
+
+	function consolidar(d){
+		console.log(d)
+		var a = new Array
+		/* Los elementos del array ya vienen ordenados por el campo time */
+		d.forEach(function(v){
+			a.push({x:Math.floor(v[0]),y:parseFloat(v[1])})
+		})
+		console.log(a)
+		return a
+	}
+
 	$("#content").empty()
-	var id = azar()
-	var s5 = printSection('content','data','col','uno',{id:id,title:'titulo',flex:'col',children:[]})
-	k8s_namespace_list(id)
+	var s1 = printSection('content','skeletor','col','uno')
+	var d1 = printSection(s1,'data','col','uno',{id:'namespaces_status',title:'Estado',flex:'row',children:[
+		{id:'status_pods',title:'Estado',flex:'row',children:[]},
+		{id:'status_cpu',title:'Estado',flex:'row',children:[]},
+		{id:'status_mem',title:'Estado',flex:'row',children:[]}
+	]})
+	var d2 = printSection(s1,'data','col','uno',{id:'namespaces',title:'Recursos',flex:'col',children:[]})
+
+	var deployments = new Array
+	var dep_status = [
+		{nombre:'activas', valor: 0, color:'green'},
+		{nombre:'inactivas', valor: 0, color:'red'}]
+	
+	/* Consumo de ram y cpu de todos los namespaces */
+	var end = Date.now() / 1000
+	var start = end - 3600	//1 horas
+	ajax_GET('/v1/app/namespace/metrics/cpu?start=' + start + '&end=' + end + '&step=5m')
+	.then(data => {
+		chart_littleLine('status_cpu',consolidar(data.message.data.result[0].values),50,50)
+	})
+	ajax_GET('/v1/app/namespace/metrics/mem?start=' + start + '&end=' + end + '&step=5m')
+	.then(data => {
+		chart_littleLine('status_mem',consolidar(data.message.data.result[0].values),50,50)
+	})
+
+	/* Estado de los pods de todos los namespaces */
+	ajax_GET('/v1/app/namespace')
+	.then(data=>{
+		var promesas = new Array
+		data.forEach(e => {
+			promesas.push(ajax_GET('/v1/app/namespace/' + e.id + '/deployment'))
+		})
+		Promise.all(promesas)
+		.then(data => {
+			data.forEach(d => {
+				var idNamespace = d.idNamespace
+				d.items.forEach( s => {
+					var deploy = {
+						idNamespace:idNamespace,
+						name:s.metadata.name,
+						namespace:s.metadata.namespace,
+						activas:0,
+						inactivas:0}
+					deployments.push(deploy)
+					if(typeof(s.status.availableReplicas) != 'undefined'){
+						dep_status[0].valor += s.status.availableReplicas
+						deploy.activas = s.status.availableReplicas
+					}
+					if(typeof(s.status.unavailableReplicas) != 'undefined'){
+						dep_status[1].valor += s.status.unavailableReplicas
+						deploy.inactivas = s.status.unavailableReplicas
+					}
+				})
+			})
+			chart_donut('status_pods',dep_status,50,50)
+		})
+		.catch(err => {
+            alert(err)
+            alert(JSON.stringify(err))
+        })
+	})
+
+
+	k8s_namespace_list('namespaces')
 }
 
 function k8s_namespace_list(parent){
@@ -53,7 +126,11 @@ function k8s_namespace_delete(){
 function k8s_deployments(){
 	$("#content").empty()
 	var s1 = printSection('content','skeletor','col','uno')
-	var d1 = printSection(s1,'data','col','uno',{id:'dep_status',title:'Estado',flex:'col',children:[]})
+	var d1 = printSection(s1,'data','col','uno',{id:'dep_status',title:'Estado',flex:'row',children:[
+		{id:'dep_status_pods',title:'Estado',flex:'row',children:[]},
+		{id:'dep_status_cpu',title:'Estado',flex:'row',children:[]},
+		{id:'dep_status_mem',title:'Estado',flex:'row',children:[]}
+	]})
 	var d2 = printSection(s1,'data','col','uno',{id:'dep_recursos',title:'Recursos',flex:'col',children:[]})
 	var d3 = printSection('content','data','col','uno',{id:'dep_listado',title:'Deployments',flex:'col',children:[]})
 
@@ -91,7 +168,9 @@ function k8s_deployments(){
 			})
 
 			/* Status de los deployments */
-			chart_donut('dep_status',dep_status,50,50)
+			chart_donut('dep_status_pods',dep_status,50,50)
+			chart_donut('dep_status_cpu',dep_status,50,50)
+			chart_donut('dep_status_mem',dep_status,50,50)
 			/* recursos de los deployments */
 
 			/* Listado de deployments */
