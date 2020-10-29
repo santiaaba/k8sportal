@@ -21,24 +21,22 @@
 		</div>
 
 		<script>
-			$("#login").animate({left:'45px'},1500)
-			$("#cloud").animate({right:'-800px'},200000,"linear")
+			$("#login").animate({left:'45px'},900)
 			$(".login-button").on("click",function(){
 				$.ajax({
 					method: 'POST',
 					url: apiserver + '/v1/user/login',
 					dataType: 'json',
 					contentType: 'application/json',
-					data: '{"name":"' + $("#name").val() + '","passwd":"' + $("#passwd").val() + '"}',
+					data: '{"name":"' + $("#name").val() +
+						  '","passwd":"' + $("#passwd").val() + '"}',
 					success: function(data){
-						//alert(JSON.stringify(data))
 						document.cookie = "username=" + data.name
 						document.cookie = "token=" + data.token
 						document.cookie = "userid=" + data.id
 						window.location.href = "index.html";
 					},
 					error: function(jqXHR,textStatus,errorThrown){
-						//alert( " ERROR: " + JSON.stringify(jqXHR))
 						$(".login-error").text("Usuario Incorrecto")
 					}
 				})

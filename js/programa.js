@@ -1,4 +1,4 @@
-var apiserver = "http://10.120.78.86:3000"
+var apiserver = "http://k8sportal.lab.fibercorp.com.ar:3000"
 var userToken		//Almacena el token obtenido con la autenticacion
 var userId
 var userName
@@ -92,13 +92,17 @@ function main(){
 			  img: 'img/volume.png',
 			  click: k8s_volumes
 			},
-			{ name: 'Keys',
+			{ name: 'Secrets',
 			  img: 'img/key.png',
-			  click: null
+			  click: k8s_secrets
 			},
 			{ name: 'Services',
 			  img: 'img/service.png',
 			  click: k8s_services
+			},
+			{ name: 'Configmap',
+			  img: 'img/configmap.png',
+			  click: null
 			}
 			],addData: [
 				{name:"Namespace",img:"img/namespace.png",detalle:
@@ -107,11 +111,15 @@ function main(){
                 'despliegues de aplicaciones.</p><p>Las aplicaciones de una namespace ' +
                 'pueden verse entre si pero no de con aplicaciones de otros namespace.' +
                 'Al menos no si no se lo permite explicitamente</p>'
-				,f:null},
-				{name:"Deployment",img:"img/deployment.png",detalle:"<Genera un nuevo despliegue>",
-					f:k8s_deployment_despliegue},
-				{name:"Volumen",img:"img/volume.png",detalle:"Aca va texto explicativo",f:k8s_volume_despliegue},
-				{name:"Servicio",img:"img/service.png",detalle:"Aca va texto explicativo",f:k8s_service_despliegue},
+				,f:k8s_namespace_despliegue},
+				{name:"Deployment",img:"img/deployment.png",
+				 detalle:'<p>Un Deployment le permite correr su aplicaci&oacute;n dentro de ' +
+				'la cantidad de contenedores que usted defina.</p>',
+				 f:k8s_deployment_despliegue},
+				{name:"Volumen",img:"img/volume.png",detalle:"Aca va texto explicativo",
+				 f:k8s_volume_despliegue},
+				{name:"Servicio",img:"img/service.png",detalle:"Aca va texto explicativo",
+				 f:k8s_service_despliegue},
 				{name:"Key",img:"img/key.png",detalle:"Aca va texto explicativo",f:null}
 			]},
 		{type:'submenu',name:'Base de datos',img:'img/database.png',submenu:[

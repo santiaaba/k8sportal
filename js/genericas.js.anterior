@@ -4,7 +4,7 @@ function printSection(parent,type,direction,flex,structure){
   					 o es "data" (posee datos)
 	   direction:	 cuando es "skeletor" indica la direccion del flex de css
 					 [row,col]
-	   flex:		 La relacion. uno, dos, tres en css o un numero que es fijo
+	   flex:		 La relacion. uno, dos, tres en css
 	   structure:	 En formato Json, detalla como es la estructura dentro de la
 					 seccion cuando type es data. Cada elemento posee tres campos:
 						title: titulo a mostrar
@@ -23,24 +23,14 @@ function printSection(parent,type,direction,flex,structure){
 	}
 	  
 	var id = azar()
-	var style =''
-
-	if(flex != 'uno' && flex != 'dos' && flex != 'tres'){
-		style="style='display:flex; flex:initial;"
-		if(direction == 'row')
-			style += " width:" + flex + "px'"
-		else
-			style += " height:" + flex + "px'"
-	}
-	flex=''
 	if(type == "skeletor"){
 		$('#' + parent)
 		.append("<div id='" + id + "' class='section_skeletor " +
-				direction + " " + flex + "' " + style + "></div>")
+				direction + " " + flex + "'></div>")
 	} else {
 		$('#' + parent)
-		.append("<div id='" + id + "' class='section_data col " +
-				flex + "' " + style + "></div>")
+		.append("<div id='" + id + "' class='section_data " +
+				direction + " " + flex + "'></div>")
 		if(typeof(structure.title) != 'undefined')
 			$("#" + id).append("<div class='section_title'>" + structure.title + "</div>")
 		printStruct(id,structure)
@@ -338,19 +328,14 @@ function azar(){
 	return Math.floor(Math.random() * 1000000)
 }
 
-function ajax_GET(path,a){
+function ajax_GET(path){
 	console.log(apiserver + path)
-	if(typeof(a) != 'undefined')
-		var async = a
-	else
-		var async = true
 	return new Promise((resolv,reject)=>{
 		$.ajax({
 			method: 'GET',
 			cache: false,
 			headers:{ "token":userToken},
 			url: apiserver + path,
-			async: async,
 			dataType: 'json',
 			contentType: 'application/json',
 			success: function(data){
@@ -403,27 +388,6 @@ function ajax_POST(path,data){
 	})
 }
 
-function ajax_PUT(path,data){
-	console.log(apiserver + path)
-	return new Promise((resolv,reject)=>{
-		$.ajax({
-			method: 'PUT',
-			cache: false,
-			headers:{ "token":userToken},
-			url: apiserver + path,
-			//dataType: 'json',
-			contentType: 'application/json',
-			data: JSON.stringify(data),
-			success: function(){
-				resolv()
-			},
-			error: function(jqXHR, textStatus, errorThrown){
-				console.log(textStatus, errorThrown);
-				reject(jqXHR)
-			}
-		})
-	})
-}
 
 function actions_make(parent,actions){
 /* Donde actions es un array de objetos:

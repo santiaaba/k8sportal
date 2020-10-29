@@ -130,6 +130,11 @@ div.section_skeletor{
 	overflow-y:auto;
 }
 
+div.section_title{
+	font-size:20px;
+	padding-bottom:10px
+}
+
 div.section_data{
 	display:flex;
 	background-color: #fff;
@@ -142,7 +147,6 @@ div.section_data{
 div.section_struct{
 	display:flex;
 	flex: 1 1;
-	padding:5px;
 }
 
 div.wrapper{

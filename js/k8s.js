@@ -14,12 +14,14 @@ function k8s_namespaces(){
 
 	$("#content").empty()
 	var s1 = printSection('content','skeletor','col','uno')
-	var d1 = printSection(s1,'data','col','uno',{id:'namespaces_status',title:'Estado',flex:'row',children:[
-		{id:'status_pods',title:'Estado',flex:'row',children:[]},
-		{id:'status_cpu',title:'Estado',flex:'row',children:[]},
-		{id:'status_mem',title:'Estado',flex:'row',children:[]}
-	]})
-	var d2 = printSection(s1,'data','col','uno',{id:'namespaces',title:'Recursos',flex:'col',children:[]})
+	var d1 = printSection(s1,'data','col','200',
+		{id:'namespaces_status',title:'Estado',flex:'row',children:[
+			{id:'status_pods',title:'Estado',flex:'row',children:[]},
+			{id:'status_cpu',title:'Estado',flex:'row',children:[]},
+			{id:'status_mem',title:'Estado',flex:'row',children:[]}
+		]})
+	var d2 = printSection(s1,'data','col','uno',
+		{id:'namespaces',title:'Recursos',flex:'col',children:[]})
 
 	var deployments = new Array
 	var dep_status = [
@@ -31,11 +33,15 @@ function k8s_namespaces(){
 	var start = end - 3600	//1 horas
 	ajax_GET('/v1/app/namespace/metrics/cpu?start=' + start + '&end=' + end + '&step=5m')
 	.then(data => {
-		chart_littleLine('status_cpu',consolidar(data.message.data.result[0].values),50,50)
+		if(typeof(data.message.data.result[0].values) != 'undefined')
+			chart_littleLine('status_cpu',consolidar(data.message.data.result[0].values),50,50)
+		/* else indicar que no hya datos */
 	})
 	ajax_GET('/v1/app/namespace/metrics/mem?start=' + start + '&end=' + end + '&step=5m')
 	.then(data => {
-		chart_littleLine('status_mem',consolidar(data.message.data.result[0].values),50,50)
+		if(typeof(data.message.data.result[0].values) != 'undefined')
+			chart_littleLine('status_mem',consolidar(data.message.data.result[0].values),50,50)
+		/* else indicar que no hya datos */
 	})
 
 	/* Estado de los pods de todos los namespaces */
@@ -87,10 +93,33 @@ function k8s_namespace_list(parent){
 			namespaces.push(e)
 		})
 		armarListado(parent,[{nombre:'Nombre',dato:'name',tipo:'string',width:200}],
-							 data,k8s_namespace,['id'],'name',true)
+							 data,k8s_namespace,['id','name'],'name',true)
 	})
 	.catch(err=>{
 		alert(JSON.stringify(err))
+	})
+}
+
+function k8s_namespace_despliegue(parent){
+	/* Permite generar un nuevo namespace. De momento
+	   no ofrece la posibilidad de modificarlo como si
+	   lo permiten funciones similares para otro tipo
+	   de objeto de k8s */
+	$("#" + parent).empty()
+	var s1 = printSection(parent,'skeletor','col','uno')
+	printSection(s1,'data','col','uno',
+			     {id:'namespace_section',
+				  title:'Namespace',
+				  flex:'col',
+				  children:[]})
+	printInput('namespace_section',"Nombre",'namespaceName','')
+	printSection(s1,'data','col','uno',{id:'namespace_save',flex:'row',children:[]})
+	printButton("namespace_save","Agregar",function(){
+		k8s_namespace_apply(function(){
+			menu_agregar.contraer(k8s_namespaces)
+		},function(){
+			alert("Informamos del error")
+		})
 	})
 }
 
@@ -99,6 +128,7 @@ function k8s_namespace_status(){
 
 function k8s_namespace(params){
 	/* params es una estructura con dos valores: idNamespace y name */
+	//alert(typeof(params))
 	$("#content").empty()
 	.append("<div id='content_menu' class='content_menu'>" +
 			"</div><div id='content_data' class='content_data'></div>" +
@@ -109,14 +139,35 @@ function k8s_namespace(params){
 	])
 	actionBar = new ActionBar('content_action')
 	actionBar.add('Eliminar','img/delete.png',2,
-		function(){ popup.up('confirm','Seguro que desea eliminar','250px','200px',k8s_namespace_delete,params)})
+		function(){ popup.up('confirm','Seguro que desea eliminar','250px','200px',function(){
+			k8s_namespace_delete(params)
+		})
+	})
 	actionBar.render()
 }
 
-function k8s_namespace_apply(){
+function k8s_namespace_apply(ok,bad){
+	data = {"name": $("#namespaceName").val()}
+	
+	ajax_POST('/v1/app/namespace/',data)
+	.then(data =>{
+		if(typeof(ok) == 'function')
+			ok()
+    })
+    .catch(err =>{
+		if(typeof(bad) == 'function')
+			bad(err)
+    })
 }
 
-function k8s_namespace_delete(){
+function k8s_namespace_delete(params){
+	ajax_DELETE("/v1/app/namespace/" + params.id)
+    .then(ok => {
+        k8s_namespaces()
+    })
+    .catch(err => {
+        alert("Error al Eliminar:" + JSON.stringify(err))
+    })
 }
 
 
@@ -132,7 +183,7 @@ function k8s_deployments(){
 		{id:'dep_status_mem',title:'Estado',flex:'row',children:[]}
 	]})
 	var d2 = printSection(s1,'data','col','uno',{id:'dep_recursos',title:'Recursos',flex:'col',children:[]})
-	var d3 = printSection('content','data','col','uno',{id:'dep_listado',title:'Deployments',flex:'col',children:[]})
+	var d3 = printSection('content','data','col','uno',{id:'dep_listado',title:'Despliegues',flex:'col',children:[]})
 
 	var deployments = new Array
 	var dep_status = [
@@ -201,7 +252,10 @@ function k8s_deployment(params){
 	])
 	actionBar = new ActionBar('content_action')
 	actionBar.add('Eliminar','img/delete.png',2,
-		function(){ popup.up('confirm','Seguro que desea eliminar','250px','200px',k8s_deployment_delete,params)})
+		function(){ popup.up('confirm','Seguro que desea eliminar','250px','200px',function(){
+			k8s_deployment_delete(params)
+		})
+	})
 	actionBar.render()
 }
 
@@ -243,7 +297,7 @@ function infoPod(params){
 		id = azar()
 		var state = Object.keys(v.state)[0]
 		//alert(JSON.stringify(v))
-		printTitle('pod_containers',v.name)
+		//printTitle('pod_containers',v.name)
 		printText('pod_containers',"Estado",azar(),state)
 		printText('pod_containers',"Imagen",azar(),v.image)
 		if(typeof(v.state[state].reason) != 'undefined'){
@@ -288,13 +342,25 @@ function k8s_deployment_despliegue(parent,params){
 	var pod_vol_section = azar()
 	var pod_containers_section = azar()
 	var s1 = printSection(parent,'skeletor','col','uno')
-	printSection(s1,'data','col','uno',{id:pod_conf_section,title:'Deployment',flex:'col',children:[]})
-	printSection(s1,'data','col','uno',{id:pod_vol_section,title:'Volumenes',flex:'col',children:[]})
-	printSection(s1,'data','col','uno',{id:pod_containers_section,title:'Contenedores',flex:'col',children:[]})
+	printSection(s1,'data','col','uno',{id:pod_conf_section,
+										title:'',
+										flex:'col',
+										children:[]})
+
+	printSection(s1,'data','col','uno',{id:pod_vol_section,
+										title:'Volumenes',
+										flex:'col',
+										children:[]})
+
+	printSection(s1,'data','col','uno',{id:pod_containers_section,
+										title:'Contenedores',
+										flex:'col',
+										children:[]})
 
 	if(typeof(params) != 'undefined'){
 		/* Es una modificacion */
-		promise = ajax_GET('/v1/app/namespace/' + params.idNamespace + '/deployment/' + params.name )
+		promise = ajax_GET('/v1/app/namespace/' + params.idNamespace +
+						   '/deployment/' + params.name )
 	} else {
 		/* Es un alta */
 		promise = new Promise((resolv,reject)=> { resolv()})
@@ -302,12 +368,14 @@ function k8s_deployment_despliegue(parent,params){
 	promise.then(data=>{
 	   if(typeof(params) != 'undefined'){
 			/* Es una modificacion */
-			actionBar.add('Salvar','img/save.png',1,k8s_deployment_apply)
+			actionBar.add('Salvar','img/save.png',1,function(){
+				k8s_deployment_apply(false,
+					function(){ k8s_deployments()},
+					function(err){ alert(err)})
+				})
 			actionBar.render()
-/*
-			$("#pod_conf").append("<input type='hidden' id='fibercorpID' value='" + data.fibercorpID + "'>")
-			$("#pod_conf").append("<input type='hidden' id='idNamespace' value='" + params.idNamespace + "'>")
-*/
+			//printHidden(pod_conf_section,'fibercorpID',params.fibercorpID)
+			printHidden(pod_conf_section,'idNamespace',params.idNamespace)
 			printText(pod_conf_section,"Nombre",'deployName',data.deployName)
 			printText(pod_conf_section,"Replicas",'replicas',data.replicas)
 		} else {
@@ -372,15 +440,17 @@ function k8s_deployment_despliegue(parent,params){
 		if(typeof(params) == 'undefined'){
 			/* Es un alta */
 			printSection(s1,'data','col','uno',{id:'deploy_salvar',flex:'row',children:[]})
-			printButton("deploy_salvar","Agregar",k8s_deployment_apply)
+			printButton("deploy_salvar","Agregar",function(){
+					k8s_deployment_apply(true,
+                		function(){ menu_agregar.contraer(k8s_deployments)},
+		                function(err){ alert(err)}
+					)
+			})
 		}
 	})
 }
 
-function k8s_deployment_apply(){
-	alert("Salvando o actualizando")
-	/* llama a la API para aplicar el deploy */
-
+function k8s_deployment_apply(alta,ok,bad){
 	/* Armamos el Json */
 	data = {
 		fibercorpID: $("#fibercorpID").val(),
@@ -453,16 +523,17 @@ function k8s_deployment_apply(){
 		data.volumes.push(JSON.parse(linea))
 	})
 
-
-	alert(JSON.stringify(data))
 	$(".solapa_body").append(JSON.stringify(data))
 	
-	ajax_POST('/v1/app/namespace/' + $("#idNamespace").val() + '/deployment/',data)
-	.then(ok =>{
-		alert(JSON.stringify(ok))
+	if(alta)
+		ajax_POST('/v1/app/namespace/' + $("#idNamespace").val() + '/deployment/',data)
+	else
+		ajax_PUT('/v1/app/namespace/' + $("#idNamespace").val() + '/deployment/',data)
+	.then(data =>{
+		ok()
 	})
 	.catch(err =>{
-		alert(JSON.stringify(err))
+		bad(err)
 	})
 }
 
@@ -472,12 +543,12 @@ function k8s_deployment_pods(parent,params){
  	 * espesifica de ese pod */
 	$("#" + parent).empty()
 	var s0 = printSection(parent,'skeletor','row','uno')
-	var d0 = printSection(s0,'data','','uno',{id:'pod_list',title:'titulo',flex:'col',children:[]})
+	var d0 = printSection(s0,'data','','uno',{id:'pod_list',title:'Pods',flex:'col',children:[]})
 	var s1 = printSection(s0,'skeletor','col','dos')
-	var d1 = printSection(s1,'data','','uno',{id:'pod_info',title:'titulo',flex:'col',children:[]})
-	var d2 = printSection(s1,'data','','uno',{id:'pod_conditions',title:'titulo',flex:'col',children:[]})
-	var d3 = printSection(s1,'data','','uno',{id:'pod_containers',title:'titulo',flex:'col',children:[]})
-	var d4 = printSection(s1,'data','','uno',{id:'pod_events',title:'titulo',flex:'col',children:[]})
+	var d1 = printSection(s1,'data','','uno',{id:'pod_info',title:'Detalle',flex:'col',children:[]})
+	var d2 = printSection(s1,'data','','uno',{id:'pod_conditions',title:'Condiciones',flex:'col',children:[]})
+	var d3 = printSection(s1,'data','','uno',{id:'pod_containers',title:'Contenedores',flex:'col',children:[]})
+	var d4 = printSection(s1,'data','','uno',{id:'pod_events',title:'Eventos',flex:'col',children:[]})
 
 
 	ajax_GET('/v1/app/namespace/' + params.idNamespace + '/deployment/' + params.name + '/pods')
@@ -499,17 +570,32 @@ function k8s_deployment_status(parent,params){
 	var s2 = printSection(s1,'skeletor','row','uno',null)
 
 	var id1 = azar()
-	printSection(s2,'data','col','uno', {id:'deploy_detalle',title:'titulo',flex:'col',children:[]})
-	printSection(s2,'data','col','uno', {id:'deploy_replicas',title:'titulo',flex:'col',children:[]})
-	printSection(s1,'data','col','uno',{id:'deploy_estadisticas',title:'titulo',flex:'col',children:[]})
-	printSection(s1,'data','col','uno',{id:'deploy_conditions',title:'titulo',flex:'col',children:[]})
+	printSection(s2,'data','col','uno', {id:'deploy_detalle',
+										 title:'Detalle',
+										 flex:'col',
+										 children:[]})
+
+	printSection(s2,'data','col','uno', {id:'deploy_replicas',
+										 title:'Pods activos',
+										 flex:'col',
+										 children:[]})
+
+	printSection(s1,'data','col','uno',{id:'deploy_estadisticas',
+										title:'Estadisticas',
+										flex:'col',
+										children:[]})
+
+	printSection(s1,'data','col','uno',{id:'deploy_conditions',
+										title:'Condiciones',
+										flex:'col',
+										children:[]})
 
 	//alert("los: " + params.name + " - " + params.idNamespace)
 	ajax_GET('/v1/app/namespace/' + params.idNamespace + '/deployment/' + params.name + '/status')
 	.then((data)=> {
 
-	// Metadatos
-		printTitle('deploy_detalle',"Detalle")
+	// Detalle
+		//printTitle('deploy_detalle',"Detalle")
 		printText('deploy_detalle',"Nombre",azar(),data.metadata.name)
 		printText('deploy_detalle',"Namespace",azar(),data.metadata.namespace)
 		printText('deploy_detalle',"Fecha Creaci&oacute;n",azar(),data.metadata.creationTimestamp)
@@ -523,14 +609,14 @@ function k8s_deployment_status(parent,params){
 				' max. pico')
 		}
 
-	// Estado de las replicas
-		printTitle('deploy_replicas',"Replicas")
+	// Replicas
+		//printTitle('deploy_replicas',"Replicas")
 		chart_donut('deploy_replicas',[
 			{nombre:'activas', valor: data.status.availableReplicas, color:'green'},
 			{nombre:'inactivas', valor:data.status.unavailableReplicas, color:'red'}],50,50)
 
 	//Conditions
-		printTitle('deploy_conditions',"Condiciones")
+		//printTitle('deploy_conditions',"Condiciones")
 		c = [{name:'tipo',widht:'100px'},
 			 {name:'estado',widht:'100px'},
 			 {name:'ultima actualizacion',widht:'100px'},
@@ -547,6 +633,31 @@ function k8s_deployment_status(parent,params){
 		alert(err)
 		alert(JSON.stringify(err))
 	})
+
+	// Estadisticas
+	var end = Date.now() / 1000
+	var start = end - 3600  //1 horas
+	ajax_GET('/v1/app/namespace/' + params.idNamespace + '/deployment/' + params.name +
+			 '/metrics/cpu?start=' + start + '&end=' + end + '&step=5m')
+	.then(ok => {
+		var data = {datasets:[],labels:[]}
+		//{ datasets: [{data:[{x:,y:}..],labels:},...], labels:[]}
+		var cpu_metrics = {data:[],label:'cpu'}
+		console.log(ok)
+		ok.message.data.result[0].values.forEach(function(v){
+			data.labels.push(v[0])
+			cpu_metrics.data.push(v[1])
+		})
+		data.datasets.push(cpu_metrics)
+		console.log("Los datos:")
+		console.log(data)
+		chart_lines('deploy_estadisticas',data,100,100)
+	})
+	.catch(err => {
+		console.log(err)
+		alert("Error al obtener las estadisticas")
+	})
+
 }
 
 
@@ -569,7 +680,8 @@ function k8s_deployment_delete(params){
 function k8s_volumes(){
 	$("#content").empty()
 	var id = azar()
-	var s5 = printSection('content','data','col','uno',{id:id,title:'titulo',flex:'col',children:[]})
+	var s5 = printSection('content','data','col','uno',
+							{id:id,title:'Volumenes',flex:'col',children:[]})
 	k8s_volumes_list(id)
 }
 
@@ -580,34 +692,26 @@ function k8s_volumes_list(parent){
 		ajax_GET('/v1/app/namespace')
 		.then(data=>{
 			data.forEach(e => {
-				$.ajax({
-					method: 'GET',
-					cache: false,
-					headers:{ "token":userToken},
-					url: apiserver + '/v1/app/namespace/' + e.id + '/volume',
-					dataType: 'json',
-					async: false,
-					contentType: 'application/json',
-					success: function(data){
-						data.items.forEach( s => {
-							var pvc = {
-								idNamespace:e.id,
-								name:s.metadata.name,
-								namespace:s.metadata.namespace}
-							pvcs.push(pvc)
-						})
-					},
-					error: function(jqXHR,textStatus,errorThrown){
-						alert(JSON.stringify(jqXHR))
-						reject(jqXHR)
-					}
+				ajax_GET('/v1/app/namespace/' + e.id + '/volume',false)
+				.then(data=>{
+					data.items.forEach( s => {
+						var pvc = {
+							idNamespace:e.id,
+							name:s.metadata.name,
+							namespace:s.metadata.namespace
+							}
+						pvcs.push(pvc)
+					})
+				})
+				.catch(err=>{
+					alert(err)
+					reject(err)
 				})
 			})
 			resolv(pvcs)
 		})
 		.catch(err=>{
 			alert(err)
-			alert(JSON.stringify(err))
 		})
 	})
 	.then(data =>{
@@ -628,7 +732,10 @@ function k8s_volume(params){
 	])
 	actionBar = new ActionBar('content_action')
 	actionBar.add('Eliminar','img/delete.png',2,
-		function(){ popup.up('confirm','Seguro que desea eliminar','250px','200px',k8s_volume_delete,params)})
+		function(){ popup.up('confirm','Seguro que desea eliminar','250px','200px',function(){
+			k8s_volume_delete(params)
+		})
+	})
 	actionBar.render()
 }
 
@@ -648,11 +755,12 @@ function k8s_volume_delete(params){
 
 function k8s_volum_status(parent,params){
 	$("#" + parent).empty()
-	var s1 = printSection(parent,'data','col','uno',{id:'volum_detalle',title:'titulo',flex:'col',children:[]})
+	var s1 = printSection(parent,'data','col','uno',
+						{id:'volum_detalle',title:'Detalle',flex:'col',children:[]})
 
 	ajax_GET('/v1/app/namespace/' + params.idNamespace + '/volume/' + params.name)
 	.then((data)=> {
-		printTitle("volum_detalle","Detalle")
+		//printTitle("volum_detalle","Detalle")
 		printText("volum_detalle","Nombre",azar(),data.metadata.name)
 		printText("volum_detalle","Namespace",azar(),data.metadata.namespace)
 		printText("volum_detalle","Fecha Creaci&oacute;n",azar(),data.metadata.creationTimestamp)
@@ -668,15 +776,14 @@ function k8s_volume_despliegue(parent,params){
 	$("#" + parent).empty()
 	var volume_conf = azar()
 	var s1 = printSection(parent,'skeletor','col','uno')
-	printSection(s1,'data','col','uno',{id:volume_conf,title:'titulo',flex:'col',children:[]})
+	printSection(s1,'data','col','uno',
+				{id:volume_conf,title:'',flex:'col',children:[]})
 
 	var promise
 	if(typeof(params) != 'undefined'){
-		alert("Es una modificacion")
 		/* Es una modificacion */
 		promise = ajax_GET('/v1/app/namespace/' + params.idNamespace + '/volume/' + params.name )
 	} else {
-		alert("Es un alta")
 		/* Es un alta. No hay volumen que buscar */
 		promise = new Promise((resolv,reject)=>{ resolv(null) })
 	}
@@ -698,10 +805,9 @@ function k8s_volume_despliegue(parent,params){
 			},err=>{
 				alert("Error al querer obtener los namespaces")
 			})
-			printSection(s1,'data','col','uno',{id:'volume_salvar',title:'titulo',flex:'row',children:[]})
+			printSection(s1,'data','col','uno',{id:'volume_salvar',title:'',flex:'row',children:[]})
 			printButton("volume_salvar","Agregar",function(){
 				k8s_volume_apply(function(){
-					alert("cerramos alta")
 					menu_agregar.contraer(k8s_volumes)
 				},function(){
 					alert("informamos error")
@@ -715,18 +821,15 @@ function k8s_volume_despliegue(parent,params){
 }
 
 function k8s_volume_apply(ok,bad){
-	alert("Apply")
 	data = {name:$("#name").val(),
 			size:$("#size").val(),
 			class:$("#type").val()}
-	alert(JSON.stringify(data))
+	//alert(JSON.stringify(data))
 	ajax_POST('/v1/app/namespace/' + $("#namespace").val() + '/volume/',data)
 	.then(data => {
-		alert("Volumen dado de alta")
 		ok()
 	},err => {
-		alert("ERROr alta volumen" + JSON.stringify(err))
-		bad()
+		bad(err)
 	})
 }
 
@@ -736,7 +839,7 @@ function k8s_volume_apply(ok,bad){
 function k8s_services(){
 	$("#content").empty()
 	var id = azar()
-	var s5 = printSection('content','data','col','uno',{id:id,title:'titulo',flex:'col',children:[]})
+	var s5 = printSection('content','data','col','uno',{id:id,title:'Servicios',flex:'col',children:[]})
 	k8s_services_list(id)
 }
 
@@ -794,7 +897,10 @@ function k8s_service(params){
 	])
 	actionBar = new ActionBar('content_action')
 	actionBar.add('Eliminar','img/delete.png',2,
-		function(){ popup.up('confirm','Seguro que desea eliminar','250px','200px',k8s_service_delete,params)})
+		function(){ popup.up('confirm','Seguro que desea eliminar','250px','200px',function(){
+			k8s_service_delete(params)
+		})
+	})
 	actionBar.render()
 }
 
@@ -820,7 +926,7 @@ function k8s_service_despliegue(parent,params){
 	$("#" + parent).empty()
 	var service_conf = azar()
 	var s1 = printSection(parent,'skeletor','col','uno')
-	printSection(s1,'data','col','uno',{id:service_conf,title:'titulo',flex:'col',children:[]})
+	printSection(s1,'data','col','uno',{id:service_conf,title:'',flex:'col',children:[]})
 
 	var promise
 	if(typeof(params) != 'undefined'){
@@ -951,4 +1057,103 @@ function k8s_service_delete(params){
 	
 }
 
+/* ------------------- Secrets -----------------------*/
 
+function k8s_secrets(){
+    $("#content").empty()
+    var id = azar()
+    var s5 = printSection('content','data','col','uno',
+                            {id:id,title:'Secrets',flex:'col',children:[]})
+    k8s_secrets_list(id)
+}
+
+function k8s_secrets_list(parent){
+    var a= new Promise((resolv,reject)=>{
+        var secrets = new Array
+        ajax_GET('/v1/app/namespace')
+        .then(data=>{
+            data.forEach(e => {
+                ajax_GET('/v1/app/namespace/' + e.id + '/secret',false)
+                .then(data=>{
+                    data.items.forEach( s => {
+                        var secret = {
+                            idNamespace:e.id,
+                            name:s.metadata.name,
+                            namespace:s.metadata.namespace
+                            }
+                        secrets.push(secret)
+                    })
+                })
+                .catch(err=>{
+                    alert(err)
+                    reject(err)
+                })
+            })
+            resolv(secrets)
+        })
+        .catch(err=>{
+            alert(err)
+        })
+    })
+    .then(data =>{
+        armarListado(parent,[{nombre:'Nombre',dato:'name',tipo:'string',width:200},
+                             {nombre:'Namespace',dato:'namespace',tipo:'string',width:200}
+                            ],data,k8s_volume,['idNamespace','name'],'name',true)
+    })
+}
+
+function k8s_secret_despliegue(parent,params){
+
+	$("#" + parent).empty()
+	var secret_conf = azar()
+	var s1 = printSection(parent,'skeletor','col','uno')
+	printSection(s1,'data','col','uno',
+				{id:secret_conf,title:'',flex:'col',children:[]})
+
+	var promise
+	if(typeof(params) != 'undefined'){
+		alert("Es una modificacion")
+		/* Es una modificacion */
+		promise = ajax_GET('/v1/app/namespace/' + params.idNamespace + '/secret/' + params.name )
+	} else {
+		/* Es un alta. No hay volumen que buscar */
+		promise = new Promise((resolv,reject)=>{ resolv(null) })
+	}
+	promise.then(data=>{
+		if(typeof(params) != 'undefined'){
+			/* Si es una modificacion  aun no esta implementado */
+		} else {
+			/* Si es un alta */
+			var promise_n = ajax_GET('/v1/app/namespace')
+			promise_n.then(data=>{
+				var options =  new Array
+				data.forEach(function(v){
+					options.push({name:v.name,value:v.id})
+				})
+				printSelect(volume_conf,'Namespace','namespace',options,null)
+				printInput(volume_conf,'Nombre del Secret','name','',null)
+				printAttributes(volume_conf,'Secrets','data',data.data)
+			},err=>{
+				alert("Error al querer obtener los namespaces")
+			})
+			printSection(s1,'data','col','uno',{id:'volume_salvar',
+												title:'',
+												flex:'row',
+												children:[]})
+			printButton("volume_salvar","Agregar",function(){
+				k8s_secret_apply(function(){
+					menu_agregar.contraer(k8s_secrets)
+				},function(){
+					alert("informamos error")
+				})
+			})
+		}
+	},err=>{
+		alert("Error al generar el formulario")
+		alert(JSON.stringify(err))
+	})
+}
+
+function k8s_volume_apply(ok,bad){
+	alert("Salvamos secret")
+}

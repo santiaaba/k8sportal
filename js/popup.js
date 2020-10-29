@@ -5,7 +5,7 @@ class PopUp{
 						 "<div id='popup_buttons' class='popup_buttons'></div></div>")
 	}
 
-	up(type,message,base,altura,f,params){
+	up(type,message,base,altura,f){
 		function down(){
 			$("#popup").css('display','none')
 			$("#popup_velo").css('display','none')
@@ -30,7 +30,7 @@ class PopUp{
 				$("#popup_buttons").append("<button id='" + id + "'>Aceptar</button>")
 				$("#" + id).on('click',function(){
 					down()
-					f(params)
+					f()
 				})
 				id = azar()
 				$("#popup_buttons").append("<button id='" + id + "'>Cancelar</button>")

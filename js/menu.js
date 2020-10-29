@@ -19,7 +19,9 @@ function make_menu(parent,home,elementName,items){
 		$("#" + id).on('click',function(){
 			$(".menu_item").removeClass("menu_select");
 			$("#" + id).addClass("menu_select");
-			value.f()
+			if(value.f != null){
+				value.f()
+			}
 		})
 		if(typeof(value.default) != 'undefined'){
 			$("#" + id).addClass("menu_select");
