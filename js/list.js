@@ -13,8 +13,8 @@ function armarListado(padre,columnas,data,onclick,onclickid,ord_col,ord_dir){
 	 * 			   tipo: tipo de dato de la columna [string,int,fecha],
 	 * 			   width: ancho de la columna }
 	 * data: Un array donde cada elemento es una fila de la tabla
-	 * onClick: funcion a aplicar al hacer click en la fila
-	 * onclickid: nombre del atributo de los datos al enviar como parametro al hacer click
+	 * onclick: funcion a aplicar al hacer click en la fila. NULL para ninguna accion
+	 * onclickid: Nombre de los parametros a ser enviados al hacer click.
      */
 
 	var idlista = azar()
@@ -61,16 +61,18 @@ function armarListado(padre,columnas,data,onclick,onclickid,ord_col,ord_dir){
 		 		.append("<div style=\"width:" + c_value.width +
 						"\">" + valor + "</div>")
 		})
-		$("#listado_fila_" + idfila).on('click',function(){
-	 		$("#listado_contenido_" + idlista).children().each(function(index){
-	 			$(this).removeClass("seleccionada")
-		 	})
-			var params = []
-			onclickid.forEach(function(p){
-				params[p] = value[p]
+		if(onclick != null){
+			$("#listado_fila_" + idfila).on('click',function(){
+		 		$("#listado_contenido_" + idlista).children().each(function(index){
+		 			$(this).removeClass("seleccionada")
+			 	})
+				var params = []
+				onclickid.forEach(function(p){
+					params[p] = value[p]
+				})
+				$(this).addClass("seleccionada")
+				onclick(params)
 			})
-			$(this).addClass("seleccionada")
-			onclick(params)
-		})
+		}
 	})
 }

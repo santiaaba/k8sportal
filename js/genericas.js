@@ -1,3 +1,7 @@
+function js(a){
+	return JSON.stringify(a)
+}
+
 function printSection(parent,type,direction,flex,structure){
 	/* parent:		 especifica el elemento DOM que la contendra
 	   type:		 especifica si es "skeletor" (solo para ordenar)
@@ -7,16 +11,19 @@ function printSection(parent,type,direction,flex,structure){
 	   flex:		 La relacion. uno, dos, tres en css o un numero que es fijo
 	   structure:	 En formato Json, detalla como es la estructura dentro de la
 					 seccion cuando type es data. Cada elemento posee tres campos:
-						title: titulo a mostrar
+						title: titulo a mostrar. Si title es null no se imprime
 					    flex: indica la direccion Flex css
-					    children: indica los elementos dentro del Flex
+					    children: otro structure. Es recursivo
 					    id: Un id unico en todo el sitio
 	*/
 	function printStruct(parent,data){
 		/* Imprime de forma recursiva la estructura */
+		var titulo = ''
+		if(data.title != null)
+			titulo = "<H3>" + data.title + "</H3>"
 		$("#"+parent)
 		.append("<div id='" + data.id + "' class='section_struct " +
-				data.flex + "'></div>")
+				data.flex + "'>" + titulo + "</div>")
 		data.children.forEach(function(v){
 			printStruct(data.id,v)
 		})
@@ -41,8 +48,10 @@ function printSection(parent,type,direction,flex,structure){
 		$('#' + parent)
 		.append("<div id='" + id + "' class='section_data col " +
 				flex + "' " + style + "></div>")
+		/*
 		if(typeof(structure.title) != 'undefined')
 			$("#" + id).append("<div class='section_title'>" + structure.title + "</div>")
+		*/
 		printStruct(id,structure)
 	}
 	return id
@@ -339,7 +348,7 @@ function azar(){
 }
 
 function ajax_GET(path,a){
-	console.log(apiserver + path)
+	console.log(path)
 	if(typeof(a) != 'undefined')
 		var async = a
 	else
@@ -349,7 +358,7 @@ function ajax_GET(path,a){
 			method: 'GET',
 			cache: false,
 			headers:{ "token":userToken},
-			url: apiserver + path,
+			url: path,
 			async: async,
 			dataType: 'json',
 			contentType: 'application/json',
@@ -369,7 +378,7 @@ function ajax_DELETE(path){
 			method: 'DELETE',
 			cache: false,
 			headers:{ "token":userToken},
-			url: apiserver + path,
+			url: path,
 			contentType: 'application/json',
 			success: function(){
 				resolv()
@@ -388,8 +397,7 @@ function ajax_POST(path,data){
 			method: 'POST',
 			cache: false,
 			headers:{ "token":userToken},
-			url: apiserver + path,
-			//dataType: 'json',
+			url: path,
 			contentType: 'application/json',
 			data: JSON.stringify(data),
 			success: function(){
@@ -410,7 +418,7 @@ function ajax_PUT(path,data){
 			method: 'PUT',
 			cache: false,
 			headers:{ "token":userToken},
-			url: apiserver + path,
+			url: path,
 			//dataType: 'json',
 			contentType: 'application/json',
 			data: JSON.stringify(data),

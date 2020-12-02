@@ -1,5 +1,6 @@
-var apiserver = "http://k8sportal.lab.fibercorp.com.ar:3000"
+const apiserver = "http://k8sportal.lab.fibercorp.com.ar:3000"
 var userToken		//Almacena el token obtenido con la autenticacion
+
 var userId
 var userName
 var anchos = [ '120px', '120px', '120px', '120px', '120px', '120px' ]
@@ -67,8 +68,26 @@ function main(){
 	})
 
 	main_menu_make('main_menu_w',
-		[{type:'submenu',name:'Maquina virtual',img:'img/vm.png',submenu:[],addData: null},
-		{type:'submenu',name:'Hosting Web',img:'img/hostingweb.png',submenu:[],addData: null},
+		[{type:'submenu',name:'Pantalla principal',img:'img/dashboard.png',submenu:[],addData: null},
+		{type:'submenu',name:'Maquina virtual',img:'img/vm.png',submenu:[],addData: null},
+		{type:'submenu',name:'Hosting Web',img:'img/hostingweb.png',submenu:[
+			{ name: 'Namespace',
+			  img: 'img/capas.png',
+			  click: www_namespaces
+			},
+			{ name: 'Site',
+			  img: 'img/www.png',
+			  click: www_sites
+			}
+		],addData: [
+				{name:"Sition Web Estandard",img:"img/www.png",detalle:
+				'<p>Le permite disponer de un sitio web utilizando tecnolog&iacute;s .NET, ' +
+				'PHP os implemente HTTP plano.</p><p>La herramienta le provee de todo los necesario' +
+				'para el desarrollo del sitio. Gesti&oacute;n de usuarios y Acceso FTP, gesti&oacute;n de URLs, ' +
+				'estadisticas, etc</p> Controle la cantidad de instancias cuando note que su sitio' +
+				'presenta un uso excesivo o progr&aacute;melo para que escale autom&aacute;ticamente.</p>'
+				,f:www_site_despliegue}
+		]},
 		{type:'submenu',name:'Almacenamiento',img:'img/storage.png',submenu:[
 			{ name: 'Object Storage',
 			  img: 'img/sss.png',
@@ -188,9 +207,8 @@ function ordenar(data,col,asc){
 	}
 	return data
 }
-
-function armarListado(padre,columnas,data,onclick,onclickid,colores,anchos,ord_col,ord_dir){
 /*
+function armarListado(padre,columnas,data,onclick,onclickid,colores,anchos,ord_col,ord_dir){
  * padre: contenedor de la lista
  * columnas: array de nombre de columnas. Debe coincidir con las columnas en data
  * data: los datos a mostrar
@@ -200,11 +218,11 @@ function armarListado(padre,columnas,data,onclick,onclickid,colores,anchos,ord_c
  * anchos: array de anchos con sufijo 'px'. ej: '100px'. Uno por cada columna en data
  * ord_col: nombre de la columna de data por la que se ordena
  * ord_dir: direccion del ordenamiento [ 1 | 0 ]
- */
+ 
 	var idlista = azar()
 	var classOscuro = '';
 
-	//alert(ord_col + " - " + ord_dir)
+	alert("Entro en este\n")
 	if(typeof(ord_col) != 'undefined' && typeof(ord_dir) != 'undefined'){
 		data = ordenar(data,ord_col,ord_dir)
 	}
@@ -275,6 +293,7 @@ function coloresDefault(data){
 	})
 	return colores
 }
+*/
 
 function popUpStart(width,height,fv){
 	$(".popUp").css("width",width)

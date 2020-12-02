@@ -1,3 +1,4 @@
+
 /* ------------------- Namespace -----------------------*/
 function k8s_namespaces(){
 
@@ -21,7 +22,7 @@ function k8s_namespaces(){
 			{id:'status_mem',title:'Estado',flex:'row',children:[]}
 		]})
 	var d2 = printSection(s1,'data','col','uno',
-		{id:'namespaces',title:'Recursos',flex:'col',children:[]})
+		{id:'namespaces',title:'Namespaces',flex:'col',children:[]})
 
 	var deployments = new Array
 	var dep_status = [
@@ -31,13 +32,13 @@ function k8s_namespaces(){
 	/* Consumo de ram y cpu de todos los namespaces */
 	var end = Date.now() / 1000
 	var start = end - 3600	//1 horas
-	ajax_GET('/v1/app/namespace/metrics/cpu?start=' + start + '&end=' + end + '&step=5m')
+	ajax_GET(apiserver + apiserver + '/v1/app/namespace/metrics/cpu?start=' + start + '&end=' + end + '&step=5m')
 	.then(data => {
 		if(typeof(data.message.data.result[0].values) != 'undefined')
 			chart_littleLine('status_cpu',consolidar(data.message.data.result[0].values),50,50)
 		/* else indicar que no hya datos */
 	})
-	ajax_GET('/v1/app/namespace/metrics/mem?start=' + start + '&end=' + end + '&step=5m')
+	ajax_GET(apiserver + apiserver + '/v1/app/namespace/metrics/mem?start=' + start + '&end=' + end + '&step=5m')
 	.then(data => {
 		if(typeof(data.message.data.result[0].values) != 'undefined')
 			chart_littleLine('status_mem',consolidar(data.message.data.result[0].values),50,50)
@@ -45,11 +46,11 @@ function k8s_namespaces(){
 	})
 
 	/* Estado de los pods de todos los namespaces */
-	ajax_GET('/v1/app/namespace')
+	ajax_GET(apiserver + '/v1/app/namespace')
 	.then(data=>{
 		var promesas = new Array
 		data.forEach(e => {
-			promesas.push(ajax_GET('/v1/app/namespace/' + e.id + '/deployment'))
+			promesas.push(ajax_GET(apiserver + '/v1/app/namespace/' + e.id + '/deployment'))
 		})
 		Promise.all(promesas)
 		.then(data => {
@@ -87,7 +88,7 @@ function k8s_namespaces(){
 
 function k8s_namespace_list(parent){
 	var namespaces = new Array
-	ajax_GET('/v1/app/namespace')
+	ajax_GET(apiserver + '/v1/app/namespace')
 	.then(data=>{
 		data.forEach(e => {
 			namespaces.push(e)
@@ -149,7 +150,7 @@ function k8s_namespace(params){
 function k8s_namespace_apply(ok,bad){
 	data = {"name": $("#namespaceName").val()}
 	
-	ajax_POST('/v1/app/namespace/',data)
+	ajax_POST(apiserver + '/v1/app/namespace/',data)
 	.then(data =>{
 		if(typeof(ok) == 'function')
 			ok()
@@ -161,7 +162,7 @@ function k8s_namespace_apply(ok,bad){
 }
 
 function k8s_namespace_delete(params){
-	ajax_DELETE("/v1/app/namespace/" + params.id)
+	ajax_DELETE(apiserver + "/v1/app/namespace/" + params.id)
     .then(ok => {
         k8s_namespaces()
     })
@@ -177,44 +178,55 @@ function k8s_namespace_delete(params){
 function k8s_deployments(){
 	$("#content").empty()
 	var s1 = printSection('content','skeletor','col','uno')
-	var d1 = printSection(s1,'data','col','uno',{id:'dep_status',title:'Estado',flex:'row',children:[
-		{id:'dep_status_pods',title:'Estado',flex:'row',children:[]},
-		{id:'dep_status_cpu',title:'Estado',flex:'row',children:[]},
-		{id:'dep_status_mem',title:'Estado',flex:'row',children:[]}
-	]})
-	var d2 = printSection(s1,'data','col','uno',{id:'dep_recursos',title:'Recursos',flex:'col',children:[]})
-	var d3 = printSection('content','data','col','uno',{id:'dep_listado',title:'Despliegues',flex:'col',children:[]})
+	var d1 = printSection(s1,'data','col','uno',{
+		id:'dep_status',title:'Estado',flex:'row',children:[
+			{id:'dep_status_pods',title:'Estado',flex:'row',children:[]},
+			{id:'dep_status_cpu',title:'Estado',flex:'row',children:[]},
+			{id:'dep_status_mem',title:'Estado',flex:'row',children:[]}
+		]})
+
+	var d2 = printSection(s1,'data','col','uno',{id:'dep_recursos',
+												 title:'Recursos',
+												 flex:'col',
+												 children:[]})
+
+	var d3 = printSection('content','data','col','uno',{id:'dep_listado',
+														title:'Despliegues',
+														flex:'col',
+														children:[]})
 
 	var deployments = new Array
 	var dep_status = [
 		{nombre:'activas', valor: 0, color:'green'},
 		{nombre:'inactivas', valor: 0, color:'red'}]
-	ajax_GET('/v1/app/namespace')
+	ajax_GET(apiserver + '/v1/app/namespace')
 	.then(data=>{
 		var promesas = new Array
 		data.forEach(e => {
-			promesas.push(ajax_GET('/v1/app/namespace/' + e.id + '/deployment'))
+			promesas.push(ajax_GET(apiserver + '/v1/app/namespace/' + e.id + '/deployment'))
 		})
 		Promise.all(promesas)
 		.then(data => {
 			data.forEach(d => {
 				var idNamespace = d.idNamespace
 				d.items.forEach( s => {
+					var activas = 0
+					var inactivas = 0
+					if(typeof(s.status.availableReplicas) != 'undefined'){
+						dep_status[0].valor += s.status.availableReplicas
+						activas = s.status.availableReplicas
+					}
+					if(typeof(s.status.unavailableReplicas) != 'undefined'){
+						dep_status[1].valor += s.status.unavailableReplicas
+						inactivas = s.status.unavailableReplicas
+					}
 					var deploy = {
 						idNamespace:idNamespace,
 						name:s.metadata.name,
 						namespace:s.metadata.namespace,
-						activas:0,
-						inactivas:0}
+						pods: activas + '/' + inactivas
+					}
 					deployments.push(deploy)
-					if(typeof(s.status.availableReplicas) != 'undefined'){
-						dep_status[0].valor += s.status.availableReplicas
-						deploy.activas = s.status.availableReplicas
-					}
-					if(typeof(s.status.unavailableReplicas) != 'undefined'){
-						dep_status[1].valor += s.status.unavailableReplicas
-						deploy.inactivas = s.status.unavailableReplicas
-					}
 				})
 			})
 
@@ -227,8 +239,7 @@ function k8s_deployments(){
 			/* Listado de deployments */
 			armarListado('dep_listado',[{nombre:'Nombre',dato:'name',tipo:'string',width:200},
 						 {nombre:'Namespace',dato:'namespace',tipo:'string',width:200},
-						 {nombre:'Pod activos',dato:'activas',tipo:'string',width:200},
-						 {nombre:'Pod inactivos',dato:'inactivas',tipo:'string',width:200}
+						 {nombre:'Pods',dato:'pods',tipo:'string',width:200},
 						 ],deployments,k8s_deployment,['idNamespace','name'],'name',true)
 		})
 		.catch(err => {
@@ -359,7 +370,7 @@ function k8s_deployment_despliegue(parent,params){
 
 	if(typeof(params) != 'undefined'){
 		/* Es una modificacion */
-		promise = ajax_GET('/v1/app/namespace/' + params.idNamespace +
+		promise = ajax_GET(apiserver + '/v1/app/namespace/' + params.idNamespace +
 						   '/deployment/' + params.name )
 	} else {
 		/* Es un alta */
@@ -374,7 +385,7 @@ function k8s_deployment_despliegue(parent,params){
 					function(err){ alert(err)})
 				})
 			actionBar.render()
-			//printHidden(pod_conf_section,'fibercorpID',params.fibercorpID)
+			printHidden(pod_conf_section,'fibercorpID',data.fibercorpID)
 			printHidden(pod_conf_section,'idNamespace',params.idNamespace)
 			printText(pod_conf_section,"Nombre",'deployName',data.deployName)
 			printText(pod_conf_section,"Replicas",'replicas',data.replicas)
@@ -382,7 +393,7 @@ function k8s_deployment_despliegue(parent,params){
 			/* Es un alta */
 			printInput(pod_conf_section,"Nombre",'deployName','')
 			printInput(pod_conf_section,"Replicas",'replicas','')
-			ajax_GET('/v1/app/namespace/')
+			ajax_GET(apiserver + '/v1/app/namespace/')
 			.then(data=>{
 				var options =  new Array
 				data.forEach(function(v){
@@ -526,9 +537,9 @@ function k8s_deployment_apply(alta,ok,bad){
 	$(".solapa_body").append(JSON.stringify(data))
 	
 	if(alta)
-		ajax_POST('/v1/app/namespace/' + $("#idNamespace").val() + '/deployment/',data)
+		ajax_POST(apiserver + '/v1/app/namespace/' + $("#idNamespace").val() + '/deployment/',data)
 	else
-		ajax_PUT('/v1/app/namespace/' + $("#idNamespace").val() + '/deployment/',data)
+		ajax_PUT(apiserver + '/v1/app/namespace/' + $("#idNamespace").val() + '/deployment/',data)
 	.then(data =>{
 		ok()
 	})
@@ -551,7 +562,7 @@ function k8s_deployment_pods(parent,params){
 	var d4 = printSection(s1,'data','','uno',{id:'pod_events',title:'Eventos',flex:'col',children:[]})
 
 
-	ajax_GET('/v1/app/namespace/' + params.idNamespace + '/deployment/' + params.name + '/pods')
+	ajax_GET(apiserver + '/v1/app/namespace/' + params.idNamespace + '/deployment/' + params.name + '/pods')
 	.then(ok=>{
 		podData = new Array
 		var datalist = new Array
@@ -591,7 +602,7 @@ function k8s_deployment_status(parent,params){
 										children:[]})
 
 	//alert("los: " + params.name + " - " + params.idNamespace)
-	ajax_GET('/v1/app/namespace/' + params.idNamespace + '/deployment/' + params.name + '/status')
+	ajax_GET(apiserver + '/v1/app/namespace/' + params.idNamespace + '/deployment/' + params.name + '/status')
 	.then((data)=> {
 
 	// Detalle
@@ -637,7 +648,7 @@ function k8s_deployment_status(parent,params){
 	// Estadisticas
 	var end = Date.now() / 1000
 	var start = end - 3600  //1 horas
-	ajax_GET('/v1/app/namespace/' + params.idNamespace + '/deployment/' + params.name +
+	ajax_GET(apiserver + '/v1/app/namespace/' + params.idNamespace + '/deployment/' + params.name +
 			 '/metrics/cpu?start=' + start + '&end=' + end + '&step=5m')
 	.then(ok => {
 		var data = {datasets:[],labels:[]}
@@ -665,7 +676,7 @@ function k8s_deployment_delete(params){
 	/* Envia a eliminar un deploy 
 	params: {idnamespace: ide del namespace, name: nombre del deploy}
 	*/
-	ajax_DELETE("/v1/app/namespace/" + params.idNamespace + "/deployment/" + params.name)
+	ajax_DELETE(apiserver + "/v1/app/namespace/" + params.idNamespace + "/deployment/" + params.name)
 	.then(ok => {
 		k8s_deployments()
 	})
@@ -689,10 +700,10 @@ function k8s_volumes(){
 function k8s_volumes_list(parent){
 	var a= new Promise((resolv,reject)=>{
 		var pvcs = new Array
-		ajax_GET('/v1/app/namespace')
+		ajax_GET(apiserver + '/v1/app/namespace')
 		.then(data=>{
 			data.forEach(e => {
-				ajax_GET('/v1/app/namespace/' + e.id + '/volume',false)
+				ajax_GET(apiserver + '/v1/app/namespace/' + e.id + '/volume',false)
 				.then(data=>{
 					data.items.forEach( s => {
 						var pvc = {
@@ -743,7 +754,7 @@ function k8s_volume_delete(params){
 	/* Envia a eliminar un deploy 
 	params: {idnamespace: ide del namespace, name: nombre del volumen}
 	*/
-	ajax_DELETE("/v1/app/namespace/" + params.idNamespace + "/volume/" + params.name)
+	ajax_DELETE(apiserver + "/v1/app/namespace/" + params.idNamespace + "/volume/" + params.name)
 	.then(ok => {
 		k8s_volumes()
 	})
@@ -758,7 +769,7 @@ function k8s_volum_status(parent,params){
 	var s1 = printSection(parent,'data','col','uno',
 						{id:'volum_detalle',title:'Detalle',flex:'col',children:[]})
 
-	ajax_GET('/v1/app/namespace/' + params.idNamespace + '/volume/' + params.name)
+	ajax_GET(apiserver + '/v1/app/namespace/' + params.idNamespace + '/volume/' + params.name)
 	.then((data)=> {
 		//printTitle("volum_detalle","Detalle")
 		printText("volum_detalle","Nombre",azar(),data.metadata.name)
@@ -782,7 +793,7 @@ function k8s_volume_despliegue(parent,params){
 	var promise
 	if(typeof(params) != 'undefined'){
 		/* Es una modificacion */
-		promise = ajax_GET('/v1/app/namespace/' + params.idNamespace + '/volume/' + params.name )
+		promise = ajax_GET(apiserver + '/v1/app/namespace/' + params.idNamespace + '/volume/' + params.name )
 	} else {
 		/* Es un alta. No hay volumen que buscar */
 		promise = new Promise((resolv,reject)=>{ resolv(null) })
@@ -792,7 +803,7 @@ function k8s_volume_despliegue(parent,params){
 			/* Si es una modificacion  aun no esta implementado */
 		} else {
 			/* Si es un alta */
-			var promise_n = ajax_GET('/v1/app/namespace')
+			var promise_n = ajax_GET(apiserver + '/v1/app/namespace')
 			promise_n.then(data=>{
 				var options =  new Array
 				data.forEach(function(v){
@@ -825,7 +836,7 @@ function k8s_volume_apply(ok,bad){
 			size:$("#size").val(),
 			class:$("#type").val()}
 	//alert(JSON.stringify(data))
-	ajax_POST('/v1/app/namespace/' + $("#namespace").val() + '/volume/',data)
+	ajax_POST(apiserver + '/v1/app/namespace/' + $("#namespace").val() + '/volume/',data)
 	.then(data => {
 		ok()
 	},err => {
@@ -846,7 +857,7 @@ function k8s_services(){
 function k8s_services_list(parent){
 	var a = new Promise((resolv,reject)=>{
 		var services = new Array
-		ajax_GET('/v1/app/namespace')
+		ajax_GET(apiserver + '/v1/app/namespace')
 		.then(data=>{
 			data.forEach(e => {
 				$.ajax({
@@ -910,7 +921,7 @@ function k8s_service_status(parent,params){
 function k8s_service_despliegue(parent,params){
 
 	function change_deployments(select){
-		var p_deploy = ajax_GET('/v1/app/namespace/' + $(select).val() + '/deployment' )
+		var p_deploy = ajax_GET(apiserver + '/v1/app/namespace/' + $(select).val() + '/deployment' )
 		p_deploy.then(ok=>{
 			var options = ''
 			ok.items.forEach(function(v,i){
@@ -931,7 +942,7 @@ function k8s_service_despliegue(parent,params){
 	var promise
 	if(typeof(params) != 'undefined'){
 		/* Es una modificacion */
-		promise = ajax_GET('/v1/app/namespace/' + params.idNamespace + '/service/' + params.name )
+		promise = ajax_GET(apiserver + '/v1/app/namespace/' + params.idNamespace + '/service/' + params.name )
 	} else {
 		/* Es un alta. No hay servicio que buscar */
 		promise = new Promise((resolv,reject)=>{ resolv(null) })
@@ -952,7 +963,7 @@ function k8s_service_despliegue(parent,params){
 			actionBar.render()
 		} else {
 			/* Si es un alta */
-			var promise_n = ajax_GET('/v1/app/namespace')
+			var promise_n = ajax_GET(apiserver + '/v1/app/namespace')
 			promise_n.then(ok=>{
 				var options = []
 				ok.forEach(function(v,i){
@@ -1035,7 +1046,7 @@ function k8s_service_apply(ok,bad){
 				data.ports.push(JSON.parse(linea))
 		})
 	})
-	ajax_POST('/v1/app/namespace/' + $("#idNamespace").val() + '/service/',data)
+	ajax_POST(apiserver + '/v1/app/namespace/' + $("#idNamespace").val() + '/service/',data)
 	.then(data =>{
 		ok()
 	},err =>{
@@ -1047,7 +1058,7 @@ function k8s_service_delete(params){
 	/* Envia a eliminar un servicio
 	params: {idnamespace: ide del namespace, name: nombre del deploy}
 	*/
-	ajax_DELETE("/v1/app/namespace/" + params.idNamespace + "/service/" + params.name)
+	ajax_DELETE(apiserver + "/v1/app/namespace/" + params.idNamespace + "/service/" + params.name)
 	.then(ok => {
 		k8s_services()
 	})
@@ -1070,10 +1081,10 @@ function k8s_secrets(){
 function k8s_secrets_list(parent){
     var a= new Promise((resolv,reject)=>{
         var secrets = new Array
-        ajax_GET('/v1/app/namespace')
+        ajax_GET(apiserver + '/v1/app/namespace')
         .then(data=>{
             data.forEach(e => {
-                ajax_GET('/v1/app/namespace/' + e.id + '/secret',false)
+                ajax_GET(apiserver + '/v1/app/namespace/' + e.id + '/secret',false)
                 .then(data=>{
                     data.items.forEach( s => {
                         var secret = {
@@ -1114,7 +1125,7 @@ function k8s_secret_despliegue(parent,params){
 	if(typeof(params) != 'undefined'){
 		alert("Es una modificacion")
 		/* Es una modificacion */
-		promise = ajax_GET('/v1/app/namespace/' + params.idNamespace + '/secret/' + params.name )
+		promise = ajax_GET(apiserver + '/v1/app/namespace/' + params.idNamespace + '/secret/' + params.name )
 	} else {
 		/* Es un alta. No hay volumen que buscar */
 		promise = new Promise((resolv,reject)=>{ resolv(null) })
@@ -1124,7 +1135,7 @@ function k8s_secret_despliegue(parent,params){
 			/* Si es una modificacion  aun no esta implementado */
 		} else {
 			/* Si es un alta */
-			var promise_n = ajax_GET('/v1/app/namespace')
+			var promise_n = ajax_GET(apiserver + '/v1/app/namespace')
 			promise_n.then(data=>{
 				var options =  new Array
 				data.forEach(function(v){
