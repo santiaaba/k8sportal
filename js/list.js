@@ -1,3 +1,51 @@
+/* El armado de distintos tipos de listas */
+
+function armarListaOrdenable(padre,data,onChange){
+	/* Permite el armado de una lista de elementos que
+	 * se ordena por drag and drop. data es una lista de strings.
+	 * onChange es una funcion a aplicar cuando hay un cambio */
+	
+
+	var idlista = azar()
+	var idul = azar()
+	$("#"+padre).append('<div id="' + idlista + '"><ul id="' + idul + '" class="sortable"></ul></div>')
+	data.forEach(function(v){
+		var iditem = azar()
+		$("#" + idul)
+		.append('<li id="' + iditem + '" class="ui-state-default"><dato>' +
+				v + '</dato><remove><img src="img/minus.png"></remove></li>')
+		$("#" + iditem  + " remove").on("click",function(){
+			$("#" + iditem).remove()
+			onChange()
+		})
+	})
+	var idAgregar = azar()
+	$("#"+idlista).append("<button id='" + idAgregar + "'>agregar</button>")
+	$("#" + idAgregar).on("click",function(){
+		var iditem = azar()
+		$("#" + idul)
+        .append('<li id="' + iditem + '" class="ui-state-default"><dato>' +
+                '<input></dato><remove><img src="img/minus.png"></remove></li>')
+		$("#" + iditem  + " remove").on("click",function(){
+			$("#" + iditem).remove()
+		})
+		$("#" + iditem + " dato input").keypress(function(e){
+			if(e.which == 13){
+				var dato = $("#" + iditem + " dato input").val()
+				$("#" + iditem + " dato input").remove()
+				$("#" + iditem + " dato").append(dato)
+				onChange()
+			}
+		})
+	})
+
+
+	$("#" + idul).sortable({
+		change: function(event,ui){ onChange() }
+	})
+    $("#" + idul).disableSelection()
+}
+
 function ordenar(data,col,asc){
 	data.sort((a,b) => (a[col] > b[col])? 1 : -1)
 	if(asc)
@@ -23,7 +71,7 @@ function armarListado(padre,columnas,data,onclick,onclickid,ord_col,ord_dir){
 	if(typeof(ord_col) != 'undefined' && typeof(ord_dir) != 'undefined'){
 		data = ordenar(data,ord_col,ord_dir)
 	}
-	$("#"+padre).empty()
+	//$("#"+padre).empty()
 	$("#"+padre).append("<div id='listado_" + idlista + "' class='listado'>" + 
 	    "<div id='listado_cabecera_" + idlista + "' class='listado_cabecera'></div>" +
 	    "<div id='listado_contenido_" + idlista + "' class='listado_contenido'></div>" +

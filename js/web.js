@@ -1,5 +1,8 @@
 const wapiserver = "http://k8sportal.lab.fibercorp.com.ar:3001"
 
+var siteChanged = false;
+var actionBar;
+
 function task_result(task_id,f){
 	/* Busca el resultado de un task y si es "done" ejecuta
 	   la funcion f */
@@ -117,10 +120,21 @@ function www_sites(){
 }
 
 function www_site_despliegue(params){
-	alert("Implementar despliegue")
+}
+
+function site_as_changed(){
+	if(!siteChanged){
+		siteChanged = true
+		actionBar.add('site_guardar','Guardar','img/save.png',0, function(){
+				www_site_save()
+		})
+		actionBar.render()
+	}
 }
 
 function www_site(params){
+	siteChanged = false
+
 	$("#content").empty()
 	.append("<div id='content_data' class='content_data'>" +
             "</div><div id='content_action' class='content_action'></div>")
@@ -137,11 +151,11 @@ function www_site(params){
 			id:'s_est',title:'Estadisticas',flex:'col',children:[]})
 	var d4 = printSection(s3,'data','col','uno',{
 			id:'s_config',title:'Configuracion',flex:'col',children:[
-				{title:'instancias',flex:'col',children:[],id:'web_instancias'},
-				{title:'urls',flex:'row',children:[],id:'web_urls'},
-				{title:'Indices',flex:'row',children:[],id:'web_index'},
-				{title:'Certificados',flex:'row',children:[],id:'web_certs'},
-				{title:'Asociacion de Certificados',flex:'row',children:[],id:'web_assoc'}
+				{title:'Instancias',flex:'col',children:[],id:'web_instancias'},
+				{title:'Urls',flex:'col',children:[],id:'web_urls'},
+				{title:'Indices',flex:'col',children:[],id:'web_indexes'},
+				{title:'Certificados',flex:'col',children:[],id:'web_certs'},
+				{title:'Asociacion de Certificados',flex:'col',children:[],id:'web_assoc'}
 			]})
 
 	console.log(params)
@@ -155,55 +169,53 @@ function www_site(params){
 
 			/* Instancias y configuraciones especiales */
 			$('#web_instancias').append("<div id='slider'></div>")
-			$('#web_instancias').append("<input id='slider_value' disabled>")
+			$('#web_instancias').append("<div><input id='slider_value' style='width:40px' disabled></div>")
 			$("#slider").slider({
 				min:1,
-				max:10,
+				max:20,
 				slide: function(event, ui){
 					$('#slider_value').val(ui.value)
+				},
+				classes:{
+					"ui-slider": "ui-slider-custom",
+					"ui-slider-handle": "ui-slider-handle-custom",
+					"ui-slider-horizontal": "ui-slider-horizontal-custom"
 				}
 			})
 
 			/* URLS */
-			var urls = new Array
-			a.message.data.urls.forEach(function(v){
-				urls.push({url:v})
-			})
-			armarListado('web_urls',[
-				{nombre:'Alias',dato:'url',tipo:'string',width:400}
-			],urls,null,[],'url',true)
+			armarListaOrdenable('web_urls',a.message.data.urls,site_as_changed)
 			
 			/* Indices */
-			var indexes = new Array
-			a.message.data.indexes.forEach(function(v){
-				indexes.push({index:v})
-			})
-			armarListado('web_indexes',[
-				{nombre:'Indices',dato:'index',tipo:'string',width:400}
-			],urls,null,[],'index',true)
-			
-
+			armarListaOrdenable('web_indexes',a.message.data.indexes,site_as_changed)
 
 			/* Barra de acciones */
-			var actionBar = new ActionBar('content_action')
+			actionBar = new ActionBar('content_action')
 			if(a.message.data.status == 'ONLINE'){
-				actionBar.add('Detener','img/stop.png',2, function(){
+				actionBar.add('site_detener','Detener','img/stop.png',2, function(){
 						www_site_stop(params)
 				})
 			} else {
-				actionBar.add('Iniciar','img/start.png',2, function(){
+				actionBar.add('site_iniciar','Iniciar','img/start.png',2, function(){
 						www_site_start(params)
 				})
 			}
-			actionBar.add('Eliminar','img/delete.png',2,
+			actionBar.add('site_eliminar','Eliminar','img/delete.png',3,
 				function(){ popup.up('confirm','Seguro que desea eliminar','250px','200px',function(){
 					www_site_delete(params)
 				})
 			})
-			actionBar.add('Visualizar','img/goto.png',2, function(){
-					www_site_show(params)
+			actionBar.add('site_visualizar','Visualizar','img/goto.png',1, function(){
+				window.open('http://www.google.com.ar','_blank')
 			})
 			actionBar.render()
 		})
 	})
+}
+
+function www_site_save(){
+	alert("salvamos el sitio")
+	siteChanged = false
+	actionBar.remove("site_guardar")
+	actionBar.render()
 }

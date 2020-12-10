@@ -6,22 +6,24 @@ class ActionBar{
 		this.id = azar()
 	}
 
-	add(name,icon,position,f){
+	add(id,name,icon,position,f){
 		/* Agrega o reemplaza un boton por su nombre */
 		
 		var index = -1
 		this.buttons.forEach(function(v,i){
-			if(v.name == name)
+			if(v.id == id)
 				index = i
 		})
 		if(index != -1)
 			this.buttons.splice(index,1)
-		this.buttons.push({name:name,icon:icon,position:position,f:f})
-		this.buttons.sort((a, b) => (a.color > b.color) ? 1 : -1)
+		this.buttons.push({id:id,name:name,icon:icon,position:position,f:f})
 	}
 
-	delete(){
-		/* Elimina el boton por su nombre */
+	remove(id){
+		/* Elimina el boton por su identificador */
+		this.buttons = this.buttons.filter(function(item){
+			return item.id != id
+		})
 	}
 
 	clean(){
@@ -33,11 +35,11 @@ class ActionBar{
 		$("#" + this.parent)
 		.empty()
 		.append("<div id='" + this.id + "' class='actionBar'></div>")
+		this.buttons.sort((a, b) => (a.position > b.position) ? 1 : -1)
 		this.buttons.forEach(function(v){
 			//alert("Agregando boton en ")
-			var id = azar()
-			$("#" + bar_id).append("<div id='" + id + "'><img src='"+ v.icon +"'></div>")
-			$("#"+id).on('click',function(){
+			$("#" + bar_id).append("<div id='" + v.id + "'><img src='"+ v.icon +"'></div>")
+			$("#" + v.id).on('click',function(){
 				v.f()
 			})
 		})

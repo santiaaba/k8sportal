@@ -1,0 +1,30 @@
+.sortable {
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+	width: 400px;
+}
+
+.sortable li {
+	display: flex;
+	margin: 0 3px 3px 3px;
+	padding: 0.4em;
+	padding-left: 1.5em;
+	font-size: 1.0em;
+	height: 18px;
+	background-color: #ccc;
+	border: 1px solid #999;
+	color: #333;
+}
+
+.sortable li dato {
+	flex: 1 1;
+	margin-left: -1.3em;
+}
+.sortable li remove{
+	flex: initial;
+	margin-left: -1.3em;
+}
+.sortable li remove img {
+	width: 20px;
+}

@@ -1,0 +1,10 @@
+.ui-slider-handle-custom{
+	background-color:#1e165b;
+}
+.ui-slider-horizontal-custom{
+	background-color:#999999;
+	height: .2em;
+}
+.ui-slider-custom{
+	margin:20px;
+}
